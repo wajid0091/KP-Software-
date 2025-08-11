@@ -1,0 +1,2422 @@
+
+<!DOCTYPE html>
+<html lang="en" class="">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="KP SOFTWARE POS">
+    <meta name="apple-mobile-web-app-title" content="KP SOFTWARE POS">
+    <meta name="theme-color" content="#1e293b">
+    <meta name="msapplication-navbutton-color" content="#1e293b">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="msapplication-starturl" content="/">
+    <link rel="icon" type="image/png" href="icons/icon-192.png"> 
+    <link rel="apple-touch-icon" href="icons/icon-192.png"> 
+    <link rel="manifest" href="manifest.json">
+
+    <title>KP SOFTWARE - POS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        :root {
+            --bg-main: #f1f5f9;
+            --bg-content: #f1f5f9;
+            --bg-sidebar: #1e293b;
+            --bg-card: #ffffff;
+            --bg-input: #f9fafb;
+            --bg-modal: #ffffff;
+            --bg-modal-darker: #f3f4f6;
+
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --text-sidebar: #e2e8f0;
+            --text-input: #0f172a;
+            --text-modal: #0f172a;
+            
+            --border-color: #d1d5db;
+            --border-sidebar: #334155;
+        }
+
+        body.dark {
+            --bg-main: #0f172a;
+            --bg-content: #0f172a;
+            --bg-sidebar: #1e293b;
+            --bg-card: #1e293b;
+            --bg-input: #334155;
+            --bg-modal: #1e293b;
+            --bg-modal-darker: #334155;
+
+            --text-primary: #e2e8f0;
+            --text-secondary: #9ca3af;
+            --text-sidebar: #e2e8f0;
+            --text-input: #e2e8f0;
+            --text-modal: #e2e8f0;
+            
+            --border-color: #4b5563;
+            --border-sidebar: #334155;
+        }
+        
+        body.light-pink {
+            --bg-main: #fff0f5; /* LavenderBlush */
+            --bg-content: #fff0f5;
+            --bg-sidebar: #8B5F65; /* Darker Pink/Rose */
+            --bg-card: #ffffff;
+            --bg-input: #faf7f7;
+            --bg-modal: #ffffff;
+            --bg-modal-darker: #fde6ea;
+
+            --text-primary: #5c2c33;
+            --text-secondary: #8c5b63;
+            --text-sidebar: #ffffff;
+            --text-input: #5c2c33;
+            --text-modal: #5c2c33;
+
+            --border-color: #fbc2c9;
+            --border-sidebar: #a57e84;
+        }
+
+        body { font-family: 'Inter', 'Noto Nastaliq Urdu', sans-serif; background-color: var(--bg-main); color: var(--text-primary); overflow-x: hidden; }
+        .main-layout { display: flex; min-height: 100vh; transition: margin-right 0.3s ease; }
+        .sidebar { width: 260px; background-color: var(--bg-sidebar); color: var(--text-sidebar); transition: width 0.3s ease, transform 0.3s ease; flex-shrink: 0; z-index: 10; }
+        .sidebar.collapsed { width: 72px; }
+        
+        .main-content { flex-grow: 1; padding: 1.5rem; height: 100vh; overflow: hidden; transition: margin-left 0.3s ease; background-color: var(--bg-content); }
+        
+        #cart-sidebar {
+            width: 400px; position: fixed; top: 0; right: 0; height: 100%; background-color: var(--bg-sidebar);
+            color: var(--text-sidebar); border-left: 1px solid var(--border-sidebar); transform: translateX(100%); 
+            transition: transform 0.3s ease; z-index: 20; display: flex; flex-direction: column;
+        }
+        #cart-sidebar.open { transform: translateX(0); }
+        .main-layout.cart-open { margin-right: 400px; }
+
+        .card { background-color: var(--bg-card); border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); padding: 1.5rem; border: 1px solid var(--border-color); }
+        .btn { padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; transition: all 0.2s ease; text-transform: uppercase; letter-spacing: 0.5px; border: none; display: inline-flex; align-items: center; justify-content: center; }
+        .btn:disabled { background-color: #4b5563; color: #9ca3af; cursor: not-allowed; }
+        .btn-primary { background-color: #2563eb; color: white; }
+        .btn-success { background-color: #16a34a; color: white; }
+        .btn-warning { background-color: #f59e0b; color: white; }
+        .btn-danger { background-color: #dc2626; color: white; }
+        .btn-info { background-color: #0ea5e9; color: white; }
+
+        .input-field { width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--border-color); border-radius: 8px; transition: border-color 0.2s, box-shadow 0.2s; background-color: var(--bg-input); color: var(--text-input); }
+        .input-field:focus { box-shadow: 0 0 0 2px #2563eb; border-color: #2563eb; }
+        .page { display: none; height: 100%; }
+        .page.active { display: flex; flex-direction: column; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .product-card-pos { 
+            position: relative; display: flex; flex-direction: column; justify-content: flex-end; 
+            height: 130px; border-radius: 8px; text-align: center; cursor: pointer; 
+            transition: all 0.2s ease-in-out; background-size: cover; background-position: center;
+            overflow: hidden;
+        }
+        .product-card-pos:not(.disabled):hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(0,0,0,0.3); }
+        .product-card-pos.disabled { opacity: 0.6; cursor: not-allowed; filter: grayscale(80%); }
+        .product-card-pos .info-overlay {
+            background: rgba(0,0,0,0.6); color: white; padding: 0.5rem;
+            backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
+        }
+        .product-card-pos .product-name { font-weight: 700; font-size: 0.875rem; line-height: 1.25rem; }
+        .product-card-pos .product-brand { font-size: 0.7rem; opacity: 0.8; line-height: 1rem; }
+        .product-card-pos .product-details { font-size: 0.75rem; line-height: 1rem; display: flex; justify-content: space-between; }
+        .product-card-pos .product-details .stock-text { font-weight: 600; }
+
+        .category-filter-btn { padding: 0.5rem 1rem; border-radius: 9999px; color: white; font-weight: 600; border: 2px solid transparent; transition: all 0.2s ease; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .category-filter-btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
+        .category-filter-btn.active { border-color: #ffffff; box-shadow: 0 0 10px rgba(255, 255, 255, 0.5); transform: scale(1.05); }
+
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; transition: opacity 0.3s; opacity: 0; pointer-events: none; }
+        .modal-overlay.visible { opacity: 1; pointer-events: auto; }
+        .modal-content { background-color: var(--bg-modal); color: var(--text-modal); padding: 2rem; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 90%; max-width: 600px; transform: scale(0.95); transition: transform 0.3s; }
+        .modal-content.max-w-4xl { max-width: 900px; }
+        .modal-overlay.visible .modal-content { transform: scale(1); }
+
+        .sidebar .nav-link { display: flex; align-items: center; padding: 0.75rem 1.5rem; color: #cbd5e1; transition: background-color 0.2s, color 0.2s; border-radius: 8px; margin: 0.25rem 0.5rem; }
+        body:not(.dark) .sidebar .nav-link.active { background-color: #2563eb; color: white; }
+        body.dark .sidebar .nav-link.active { background-color: #2563eb; color: white; }
+        body.light-pink .sidebar .nav-link { color: #fde6ea; }
+        body.light-pink .sidebar .nav-link:hover { background-color: #a57e84; }
+        body.light-pink .sidebar .nav-link.active { background-color: #e11d48; color: white; }
+        .sidebar .nav-link .link-text { margin-left: 1rem; white-space: nowrap; opacity: 1; transition: opacity 0.3s; }
+        .sidebar.collapsed .nav-link .link-text { opacity: 0; width: 0; pointer-events: none; }
+        
+        .card *:not(i):not(button) { color: var(--text-primary); } 
+        table, table *:not(i):not(button) { color: var(--text-primary); }
+
+        .card .text-gray-400 { color: var(--text-secondary) !important; }
+        .text-red-400 { color: #fb7185 !important; }
+        .text-green-600 { color: #22c55e !important; }
+        .text-yellow-400 { color: #facc15 !important; }
+        
+        /* New Report Styles */
+        .report-section-title {
+            background-color: var(--bg-modal-darker);
+            padding: 0.75rem 1.25rem;
+            font-size: 1.125rem;
+            font-weight: 700;
+            border-bottom: 2px solid var(--border-color);
+            border-radius: 8px 8px 0 0;
+        }
+        .report-table { width: 100%; border-collapse: collapse; }
+        .report-table th, .report-table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+            text-align: left;
+        }
+        .report-table th { font-weight: 600; background-color: var(--bg-modal-darker); }
+        .report-table tbody tr:nth-child(even) { background-color: var(--bg-modal-darker); }
+        .report-table tfoot td { font-weight: 700; background-color: var(--bg-input); }
+        .highlight-green { background-color: #16a34a; color: white; padding: 4px 8px; border-radius: 6px; }
+        .highlight-red { background-color: #dc2626; color: white; padding: 4px 8px; border-radius: 6px; }
+        .summary-table td { padding: 0.5rem; }
+
+        .force-black-text, .force-black-text * { color: black !important; opacity: 1 !important; }
+
+        @media (max-width: 768px) {
+            .responsive-table-container { overflow-x: auto; }
+        }
+
+        @media print {
+            body.printing * { visibility: hidden !important; }
+            .no-print { display: none !important; }
+            .printable-area, .printable-area * { visibility: visible !important; }
+            .printable-modal { position: absolute; left: 0; top: 0; margin: 0; padding: 0; width: 100%; height: auto; display: block !important; }
+            
+            .printable-wrapper { display: block !important; width: 80mm; padding: 3mm; box-sizing: border-box; background: white !important; }
+            .printable-wrapper *, .printable-area * { color: black !important; opacity: 1 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .printable-wrapper h2 { font-size: 14pt; margin-bottom: 4px; }
+            .printable-wrapper p, .printable-wrapper div, .printable-wrapper span, .printable-wrapper strong { font-size: 9pt; }
+            .printable-wrapper table th, .printable-wrapper table td { padding: 2px 0; font-size: 8pt; word-break: break-word; }
+            .printable-wrapper hr { border-style: dashed !important; border-color: black !important; }
+            .ledger-printable, .ledger-printable * { visibility: visible !important; color: black !important; }
+            .ledger-printable { display: block !important; position: absolute; left: 0; top: 0; margin: 0; padding: 10mm; width: 100%; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+            .report-printable, .report-printable * { visibility: visible !important; color: black !important; }
+            .report-printable { display: block !important; position: absolute; left: 0; top: 0; margin: 0; padding: 10mm; width: 100%; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .report-printable .card { background-color: #f3f4f6 !important; border: 1px solid #ccc; box-shadow: none; }
+            .report-printable .text-green-600 { color: #059669 !important; }
+            .report-printable .highlight-green, .report-printable .highlight-red {
+                background-color: #ccc !important; color: black !important;
+            }
+        }
+    </style>
+</head>
+<body class="dark">
+
+<div id="login-container" class="flex items-center justify-center min-h-screen bg-slate-900">
+    <div class="w-full max-w-sm p-8 space-y-6 bg-slate-800 rounded-2xl shadow-2xl">
+        <div class="text-center">
+            <i class="fas fa-laptop-code text-blue-400 text-6xl"></i>
+            <h1 class="mt-5 text-3xl font-bold text-white tracking-tight">KP SOFTWARE</h1>
+            <p class="mt-2 text-slate-400">Welcome to the POS Software</p>
+        </div>
+        <form id="login-form" class="space-y-6">
+            <div class="space-y-4">
+                <div>
+                    <label for="email-address" class="text-sm font-medium text-slate-300">Email Address</label>
+                    <input id="email-address" name="email" type="email" autocomplete="email" required class="input-field mt-1" placeholder="user@example.com">
+                </div>
+                <div>
+                    <label for="password" class="text-sm font-medium text-slate-300">Password</label>
+                    <input id="password" name="password" type="password" autocomplete="current-password" required class="input-field mt-1" placeholder="••••••••">
+                </div>
+            </div>
+            <p id="login-error" class="text-red-400 text-sm text-center h-4"></p>
+            <div>
+                <button type="submit" class="btn btn-primary w-full group text-base py-3">
+                    <i class="fas fa-sign-in-alt mr-2"></i> Sign In
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="app-layout" class="main-layout hidden">
+    <!-- Left Sidebar -->
+    <aside id="sidebar" class="sidebar flex flex-col no-print">
+        <div class="p-4 flex items-center justify-between h-20 border-b" style="border-color: var(--border-sidebar);">
+            <div class="flex items-center">
+                <i class="fas fa-laptop-code text-blue-400 text-3xl"></i>
+                <h1 class="text-xl font-bold ml-2 link-text">KP SOFTWARE</h1>
+            </div>
+            <div class="relative">
+                <button id="theme-switcher-btn" class="p-2 rounded-full hover:bg-slate-700 transition">
+                    <i class="fas fa-palette text-xl"></i>
+                </button>
+                <div id="theme-menu" class="hidden absolute right-0 mt-2 w-32 bg-white dark:bg-slate-800 rounded-md shadow-lg py-1 z-50">
+                    <a href="#" data-theme="light" class="theme-option block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700">Light</a>
+                    <a href="#" data-theme="dark" class="theme-option block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700">Dark</a>
+                    <a href="#" data-theme="light-pink" class="theme-option block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700">Light Pink</a>
+                </div>
+            </div>
+        </div>
+        <nav class="flex-grow py-4">
+            <a href="#" class="nav-link" data-page="dashboard"><i class="fas fa-tachometer-alt fa-fw w-6 text-lg"></i><span class="link-text">Dashboard</span></a>
+            <a href="#" class="nav-link" data-page="pos"><i class="fas fa-cash-register fa-fw w-6 text-lg"></i><span class="link-text">POS</span></a>
+            <a href="#" class="nav-link" data-page="financial-ledger"><i class="fas fa-book-open fa-fw w-6 text-lg"></i><span class="link-text">Financial Ledger</span></a>
+            <a href="#" class="nav-link" data-page="hold-bills"><i class="fas fa-pause-circle fa-fw w-6 text-lg"></i><span class="link-text">Hold Bills</span></a>
+            <a href="#" class="nav-link" data-page="returned-bills"><i class="fas fa-undo fa-fw w-6 text-lg"></i><span class="link-text">Returned Bills</span></a>
+            <a href="#" class="nav-link" data-page="products"><i class="fas fa-box-open fa-fw w-6 text-lg"></i><span class="link-text">Products</span></a>
+            <a href="#" class="nav-link" data-page="brands"><i class="fas fa-tags fa-fw w-6 text-lg"></i><span class="link-text">Brands</span></a>
+            <a href="#" class="nav-link" data-page="groups"><i class="fas fa-layer-group fa-fw w-6 text-lg"></i><span class="link-text">Groups</span></a>
+            <a href="#" class="nav-link" data-page="customers"><i class="fas fa-users fa-fw w-6 text-lg"></i><span class="link-text">Customers (Khata)</span></a>
+            <a href="#" class="nav-link" data-page="suppliers"><i class="fas fa-truck fa-fw w-6 text-lg"></i><span class="link-text">Suppliers</span></a>
+            <a href="#" class="nav-link" data-page="staff-management"><i class="fas fa-users-cog fa-fw w-6 text-lg"></i><span class="link-text">Staff Management</span></a>
+            <a href="#" class="nav-link" data-page="expenses"><i class="fas fa-receipt fa-fw w-6 text-lg"></i><span class="link-text">Expenses</span></a>
+            <a href="#" class="nav-link" data-page="reports"><i class="fas fa-chart-pie fa-fw w-6 text-lg"></i><span class="link-text">Sales Reports</span></a>
+            <a href="#" class="nav-link" data-page="day-end-report"><i class="fas fa-file-invoice-dollar fa-fw w-6 text-lg"></i><span class="link-text">Daily Report</span></a>
+            <a href="#" class="nav-link" data-page="settings"><i class="fas fa-cogs fa-fw w-6 text-lg"></i><span class="link-text">Settings</span></a>
+        </nav>
+        <div class="p-2 border-t" style="border-color: var(--border-sidebar);">
+             <button id="sidebar-toggle" class="w-full text-left nav-link"><i class="fas fa-chevron-left fa-fw w-6 text-lg"></i><span class="link-text">Collapse</span></button>
+             <button id="logout-btn" class="w-full text-left nav-link text-red-400 hover:bg-red-500 hover:text-white"><i class="fas fa-sign-out-alt fa-fw w-6 text-lg"></i><span class="link-text">Logout</span></button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main id="main-content" class="main-content">
+        
+        <!-- Dashboard Page -->
+        <div id="dashboard" class="page overflow-y-auto">
+             <div class="flex-shrink-0 mb-6">
+                <h1 class="text-3xl font-bold">Dashboard</h1>
+                <div class="flex flex-wrap justify-between items-center mt-4 gap-4">
+                    <div class="flex items-center gap-2">
+                        <button class="btn btn-sm btn-info" id="db-daily-btn">Today</button>
+                        <button class="btn btn-sm btn-info" id="db-weekly-btn">This Week</button>
+                        <button class="btn btn-sm btn-info" id="db-monthly-btn">This Month</button>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div><label for="db-start-date" class="text-sm">Start</label><input type="date" id="db-start-date" class="input-field p-2 text-sm"></div>
+                        <div><label for="db-end-date" class="text-sm">End</label><input type="date" id="db-end-date" class="input-field p-2 text-sm"></div>
+                        <button class="btn btn-primary btn-sm" id="db-filter-btn">Filter</button>
+                    </div>
+                </div>
+            </div>
+             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                <div class="card p-5"><h3 class="text-gray-400">Purchase Value (Stock)</h3><p id="total-stock-value-cost" class="text-3xl font-bold">₨0.00</p></div>
+                <div class="card p-5"><h3 class="text-gray-400">Sell Value (Stock)</h3><p id="total-stock-value-sell" class="text-3xl font-bold">₨0.00</p></div>
+                <div class="card p-5"><h3 class="text-gray-400">Net Sales</h3><p id="todays-sales" class="text-3xl font-bold">₨0.00</p></div>
+                <div class="card p-5"><h3 class="text-gray-400">Net Profit</h3><p id="todays-profit" class="text-3xl font-bold text-green-400">₨0.00</p></div>
+                <div class="card p-5"><h3 class="text-gray-400">Today's Returns</h3><p id="todays-returns" class="text-3xl font-bold text-red-400">₨0.00</p></div>
+             </div>
+             <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mt-6">
+                <div class="lg:col-span-1 card"><h3 class="text-xl font-semibold mb-4">Top Selling Products</h3><div id="top-selling-products" class="space-y-3 max-h-60 overflow-y-auto"></div></div>
+                <div class="lg:col-span-1 card"><h3 class="text-xl font-semibold mb-4 text-red-500">Low Stock Alerts (≤ 10)</h3><div id="low-stock-alerts" class="space-y-2 max-h-60 overflow-y-auto"></div></div>
+                <div class="lg:col-span-1 card"><h3 class="text-xl font-semibold mb-4 text-yellow-500">Expiring Soon (30 Days)</h3><div id="expiring-soon-alerts" class="space-y-2 max-h-60 overflow-y-auto"></div></div>
+                <div class="lg:col-span-1 card"><h3 class="text-xl font-semibold mb-4 text-red-700">Expired Products</h3><div id="expired-products-alerts" class="space-y-2 max-h-60 overflow-y-auto"></div></div>
+             </div>
+             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
+                <div class="card p-5"><h3 class="text-gray-400">Total Credit Due</h3><p id="total-credit-due" class="text-3xl font-bold text-orange-400">₨0.00</p></div>
+                <div class="card p-5"><h3 class="text-gray-400">Credit Received</h3><p id="todays-credit-received" class="text-3xl font-bold text-cyan-400">₨0.00</p></div>
+                <div class="lg:col-span-1 card"><h3 class="text-xl font-semibold mb-4 text-gray-500">Out of Stock</h3><div id="out-of-stock-alerts" class="space-y-2 max-h-60 overflow-y-auto"></div></div>
+                <div class="lg:col-span-1 card"><h3 class="text-xl font-semibold mb-4 text-slate-500">Recent Supplier Purchases</h3><div id="recent-purchases-alerts" class="space-y-2 max-h-60 overflow-y-auto"></div></div>
+             </div>
+        </div>
+
+        <!-- POS Page -->
+        <div id="pos" class="page flex-col">
+            <div class="card flex flex-col flex-grow overflow-hidden">
+                <div class="flex-shrink-0 mb-4">
+                    <input type="text" id="product-search" placeholder="Search by Product Name, SKU, or Brand..." class="input-field w-full mb-3">
+                    <div class="flex justify-between items-center gap-4 flex-wrap">
+                        <div id="category-filters" class="flex flex-wrap gap-2"></div>
+                        <div class="flex gap-2">
+                           <select id="brand-filter-dropdown" class="input-field py-2 pr-8" style="min-width: 200px;"><option value="All">All Brands</option></select>
+                           <select id="group-filter-dropdown" class="input-field py-2 pr-8" style="min-width: 200px;"><option value="All">All Groups</option></select>
+                        </div>
+                    </div>
+                </div>
+                <div id="product-list" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4 flex-grow overflow-y-auto p-1"></div>
+            </div>
+        </div>
+        
+        <!-- Hold Bills Page -->
+        <div id="hold-bills" class="page flex-col">
+            <h1 class="text-3xl font-bold mb-6 flex-shrink-0">Hold Bills</h1>
+            <div id="hold-bills-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 flex-grow overflow-y-auto p-1">
+                <!-- Hold bills will be rendered here by JS -->
+            </div>
+        </div>
+        
+        <!-- Financial Ledger Page -->
+        <div id="financial-ledger" class="page flex-col">
+            <h1 class="text-3xl font-bold mb-6 flex-shrink-0">Financial Ledger</h1>
+            <div class="card flex-grow flex flex-col overflow-hidden">
+                <div class="flex flex-wrap justify-between items-center mb-4 gap-4 flex-shrink-0 no-print">
+                    <div class="flex items-center gap-2">
+                        <button class="btn btn-sm btn-info" id="ledger-daily-btn">Today</button>
+                        <button class="btn btn-sm btn-info" id="ledger-weekly-btn">This Week</button>
+                        <button class="btn btn-sm btn-info" id="ledger-monthly-btn">This Month</button>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div><label for="ledger-start-date" class="text-sm">Start</label><input type="date" id="ledger-start-date" class="input-field p-2 text-sm"></div>
+                        <div><label for="ledger-end-date" class="text-sm">End</label><input type="date" id="ledger-end-date" class="input-field p-2 text-sm"></div>
+                        <button class="btn btn-primary btn-sm" id="ledger-filter-btn">Filter</button>
+                    </div>
+                </div>
+                 <div class="overflow-auto flex-grow">
+                     <table class="w-full text-left">
+                         <thead>
+                            <tr class="sticky top-0 z-10" style="background-color: var(--bg-modal-darker);">
+                                <th class="p-3">Date</th>
+                                <th>Description</th>
+                                <th>Type</th>
+                                <th class="text-right">Debit (-)</th>
+                                <th class="text-right">Credit (+)</th>
+                                <th class="text-right">Running Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody id="financial-ledger-table-body"></tbody>
+                        <tfoot class="sticky bottom-0 font-bold" style="background-color: var(--bg-modal-darker);">
+                            <tr>
+                                <td colspan="3" class="p-3 text-right">Total Sales:</td>
+                                <td></td>
+                                <td id="ledger-summary-sales" class="text-right text-green-400"></td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="p-3 text-right">Total Purchases Paid:</td>
+                                <td id="ledger-summary-purchases" class="text-right text-red-400"></td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="p-3 text-right">Total Expenses & Returns:</td>
+                                <td id="ledger-summary-expenses" class="text-right text-red-400"></td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                            <tr class="text-xl border-t-2" style="border-color: var(--border-color);">
+                                <td colspan="3" class="p-4 text-right">Net Profit / Loss:</td>
+                                <td colspan="3" id="ledger-summary-net" class="text-right p-4"></td>
+                            </tr>
+                         </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+         <!-- Returned Bills Page -->
+        <div id="returned-bills" class="page flex-col">
+            <h1 class="text-3xl font-bold mb-6 flex-shrink-0">Returned Bills</h1>
+            <div class="card flex-grow flex flex-col overflow-hidden">
+                <div class="mb-4 flex-shrink-0">
+                    <input type="text" id="returned-bills-search" placeholder="Search by Invoice ID..." class="input-field w-full md:w-1/2">
+                </div>
+                <div class="overflow-auto flex-grow">
+                    <table class="w-full text-left">
+                        <thead class="sticky top-0 z-10" style="background-color: var(--bg-modal-darker);">
+                            <tr>
+                                <th class="p-3">Invoice ID</th>
+                                <th>Date</th>
+                                <th>Customer</th>
+                                <th class="text-orange-400">Status</th>
+                                <th>Returned Items Value</th>
+                                <th class="text-center">View Invoice</th>
+                            </tr>
+                        </thead>
+                        <tbody id="returned-bills-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products Page -->
+        <div id="products" class="page flex-col">
+            <h1 class="text-3xl font-bold mb-6 flex-shrink-0">Product Management</h1>
+            <div class="card mb-6 flex-shrink-0">
+                <h2 class="text-xl font-bold mb-4">Add New Product</h2>
+                <form id="add-product-form">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-end mb-4">
+                        <div><label class="font-medium">Product Name</label><input type="text" id="product-name" class="input-field" required></div>
+                        <div><label class="font-medium">Brand</label><select id="product-brand" class="input-field"><option value="">-- No Brand --</option></select></div>
+                        <div><label class="font-medium">SKU / Model No.</label><input type="text" id="product-sku" class="input-field"></div>
+                        <div><label class="font-medium">Category</label><select id="product-category" class="input-field" required></select></div>
+                        <div><label class="font-medium">Group</label><select id="product-group" class="input-field"><option value="">-- No Group --</option></select></div>
+                        <div><label class="font-medium">Cost Price</label><input type="number" id="product-cost-price" class="input-field" required min="0" step="0.01"></div>
+                        <div><label class="font-medium">Sell Price</label><input type="number" id="product-sell-price" class="input-field" required min="0" step="0.01"></div>
+                        <div><label class="font-medium">Stock</label><input type="number" id="product-stock" class="input-field" required min="0"></div>
+                        <div><label class="font-medium">Expiry Date (Optional)</label><input type="date" id="product-expiry" class="input-field"></div>
+                        <div class="md:col-span-1 lg:col-span-3"><label class="font-medium">Product Image</label><input type="file" id="product-image" class="input-field" accept="image/*"></div>
+                    </div>
+                    <div class="flex justify-end">
+                         <button type="submit" class="btn btn-primary"><i class="fas fa-plus mr-2"></i>Add Product</button>
+                    </div>
+                </form>
+            </div>
+            <div class="card flex-grow flex flex-col overflow-hidden">
+                 <h2 class="text-xl font-bold mb-4 flex-shrink-0">All Products</h2>
+                 <div class="overflow-auto flex-grow"><table class="w-full text-left"><thead><tr class="sticky top-0 z-10" style="background-color: var(--bg-modal-darker);"><th class="p-3">Image</th><th>Name</th><th>Brand</th><th>SKU/Model</th><th>Category</th><th>Cost Price</th><th>Sell Price</th><th>Stock</th><th>Expiry</th><th>Actions</th></tr></thead><tbody id="products-table-body"></tbody></table></div>
+            </div>
+        </div>
+
+        <!-- Brands Page -->
+        <div id="brands" class="page flex-col">
+            <h1 class="text-3xl font-bold mb-6 flex-shrink-0">Brand Management</h1>
+            <div class="card mb-6 flex-shrink-0">
+                <h2 class="text-xl font-bold mb-4">Add/Edit Brand</h2>
+                <form id="add-brand-form" class="space-y-4">
+                    <input type="hidden" id="editing-brand-id">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div><label class="font-medium">Brand Name</label><input type="text" id="brand-name" class="input-field" required></div>
+                        <div><label class="font-medium">Details / Specification</label><input type="text" id="brand-details" class="input-field"></div>
+                    </div>
+                    <div><label class="font-medium">Description</label><textarea id="brand-description" class="input-field" rows="2"></textarea></div>
+                    <div><label class="font-medium">Notes</label><textarea id="brand-notes" class="input-field" rows="2"></textarea></div>
+                    <div class="flex justify-end gap-2">
+                        <button type="button" id="cancel-edit-brand-btn" class="btn btn-danger hidden">Cancel Edit</button>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-plus mr-2"></i>Save Brand</button>
+                    </div>
+                </form>
+            </div>
+            <div class="card flex-grow flex flex-col overflow-hidden">
+                <h2 class="text-xl font-bold mb-4 flex-shrink-0">All Brands</h2>
+                <div class="overflow-auto flex-grow">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="sticky top-0 z-10" style="background-color: var(--bg-modal-darker);"><th class="p-3">Name</th><th>Details</th><th class="text-center">Actions</th></tr>
+                        </thead>
+                        <tbody id="brands-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Groups Page -->
+        <div id="groups" class="page flex-col">
+            <h1 class="text-3xl font-bold mb-6 flex-shrink-0">Group Management</h1>
+            <div class="card mb-6 flex-shrink-0">
+                <h2 class="text-xl font-bold mb-4">Add New Group</h2>
+                <form id="add-group-form" class="flex items-end gap-4">
+                    <div class="flex-grow">
+                        <label for="group-name" class="font-medium">Group Name</label>
+                        <input type="text" id="group-name" class="input-field" required>
+                    </div>
+                    <div>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-plus mr-2"></i>Add Group</button>
+                    </div>
+                </form>
+            </div>
+            <div class="card flex-grow flex flex-col overflow-hidden">
+                <h2 class="text-xl font-bold mb-4 flex-shrink-0">All Groups</h2>
+                <div class="overflow-auto flex-grow">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="sticky top-0 z-10" style="background-color: var(--bg-modal-darker);">
+                                <th class="p-3">Name</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="groups-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customers (Khata) Page -->
+        <div id="customers" class="page flex-col">
+            <h1 class="text-3xl font-bold mb-6 flex-shrink-0">Customer Management (Khata)</h1>
+            <div class="card flex-grow flex flex-col overflow-hidden"> 
+                <div class="flex justify-between items-center mb-4 flex-shrink-0"> 
+                    <h2 class="text-xl font-bold">All Customers</h2> 
+                    <button id="add-customer-btn" class="btn btn-primary"><i class="fas fa-user-plus mr-2"></i>Add New Customer</button> 
+                </div> 
+                <div class="overflow-auto flex-grow"> 
+                    <table class="w-full text-left"> 
+                        <thead class="sticky top-0 z-10" style="background-color: var(--bg-modal-darker);"> 
+                            <tr> 
+                                <th class="p-3">Name</th> 
+                                <th>Phone</th> 
+                                <th class="text-red-400">Balance</th> 
+                                <th class="text-center">Actions</th> 
+                            </tr> 
+                        </thead> 
+                        <tbody id="customers-table-body"></tbody> 
+                    </table> 
+                </div> 
+            </div> 
+        </div>
+
+        <!-- Suppliers Page -->
+        <div id="suppliers" class="page flex-col"> 
+            <h1 class="text-3xl font-bold mb-6 flex-shrink-0">Supplier Purchases</h1>
+            <div class="card flex-grow flex flex-col overflow-hidden"> 
+                <div class="flex justify-between items-center mb-4 flex-shrink-0"> 
+                    <h2 class="text-xl font-bold">Purchase History</h2> 
+                    <button id="add-purchase-btn" class="btn btn-primary"><i class="fas fa-plus mr-2"></i>Add New Purchase</button> 
+                </div> 
+                <div class="overflow-auto flex-grow"> 
+                    <table class="w-full text-left"> 
+                        <thead class="sticky top-0 z-10" style="background-color: var(--bg-modal-darker);"> 
+                            <tr> 
+                                <th class="p-3">Supplier</th> 
+                                <th>Date</th>
+                                <th>Purchase ID</th>
+                                <th>Total Bill</th> 
+                                <th>Paid</th> 
+                                <th class="text-red-400">Remaining</th> 
+                                <th class="text-center">Actions</th> 
+                            </tr> 
+                        </thead> 
+                        <tbody id="purchases-table-body"></tbody> 
+                    </table> 
+                </div> 
+            </div> 
+        </div>
+
+        <!-- Staff Management Page -->
+        <div id="staff-management" class="page flex-col">
+            <h1 class="text-3xl font-bold mb-6 flex-shrink-0">Staff Management</h1>
+            <div class="card mb-6 flex-shrink-0">
+                <h2 class="text-xl font-bold mb-4">Add New Staff Member</h2>
+                <form id="add-staff-form">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-end mb-4">
+                        <div><label class="font-medium">Full Name</label><input type="text" id="staff-name" class="input-field" required></div>
+                        <div><label class="font-medium">Phone Number</label><input type="tel" id="staff-phone" class="input-field"></div>
+                        <div><label class="font-medium">Position / Role</label><input type="text" id="staff-position" class="input-field" required></div>
+                        <div><label class="font-medium">Salary (Monthly)</label><input type="number" id="staff-salary" class="input-field" required min="0"></div>
+                        <div><label class="font-medium">Joining Date</label><input type="date" id="staff-joining-date" class="input-field" required></div>
+                    </div>
+                    <div class="flex justify-end">
+                         <button type="submit" class="btn btn-primary"><i class="fas fa-user-plus mr-2"></i>Add Staff</button>
+                    </div>
+                </form>
+            </div>
+            <div class="card flex-grow flex flex-col overflow-hidden">
+                 <h2 class="text-xl font-bold mb-4 flex-shrink-0">All Staff Members</h2>
+                 <div class="overflow-auto flex-grow">
+                     <table class="w-full text-left">
+                         <thead>
+                             <tr class="sticky top-0 z-10" style="background-color: var(--bg-modal-darker);">
+                                 <th class="p-3">Name</th>
+                                 <th>Phone</th>
+                                 <th>Position</th>
+                                 <th>Salary</th>
+                                 <th>Status</th>
+                                 <th>Actions</th>
+                             </tr>
+                         </thead>
+                         <tbody id="staff-table-body"></tbody>
+                     </table>
+                 </div>
+            </div>
+        </div>
+
+        <!-- Expenses Page -->
+        <div id="expenses" class="page flex-col">
+            <h1 class="text-3xl font-bold mb-6 flex-shrink-0">Expense Management</h1>
+            <div class="card mb-6 flex-shrink-0">
+                <h2 class="text-xl font-bold mb-4">Add Manual Expense</h2>
+                <form id="add-expense-form">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end mb-4">
+                        <div><label class="font-medium">Expense Title</label><input type="text" id="expense-title" class="input-field" required></div>
+                        <div>
+                            <label class="font-medium">Category</label>
+                            <select id="expense-category" class="input-field" required>
+                                <option value="Rent">Rent</option>
+                                <option value="Utilities">Utilities (Bills)</option>
+                                <option value="Maintenance">Maintenance</option>
+                                <option value="Marketing">Marketing</option>
+                                <option value="Miscellaneous">Miscellaneous</option>
+                            </select>
+                        </div>
+                        <div><label class="font-medium">Amount</label><input type="number" id="expense-amount" class="input-field" required min="0" step="0.01"></div>
+                        <div class="md:col-span-2"><label class="font-medium">Notes (Optional)</label><textarea id="expense-notes" class="input-field" rows="1"></textarea></div>
+                        <div><label class="font-medium">Date</label><input type="date" id="expense-date" class="input-field" required></div>
+                    </div>
+                    <div class="flex justify-end">
+                         <button type="submit" class="btn btn-primary"><i class="fas fa-plus mr-2"></i>Add Expense</button>
+                    </div>
+                </form>
+            </div>
+            <div class="card flex-grow flex flex-col overflow-hidden">
+                 <div class="flex justify-between items-center mb-4 flex-shrink-0">
+                    <h2 class="text-xl font-bold">Recorded Expenses</h2>
+                 </div>
+                 <div class="overflow-auto flex-grow">
+                     <table class="w-full text-left">
+                         <thead>
+                             <tr class="sticky top-0 z-10" style="background-color: var(--bg-modal-darker);">
+                                 <th class="p-3">Date</th>
+                                 <th>Title</th>
+                                 <th>Category</th>
+                                 <th class="text-right">Amount</th>
+                                 <th>Actions</th>
+                             </tr>
+                         </thead>
+                         <tbody id="expenses-table-body"></tbody>
+                     </table>
+                 </div>
+            </div>
+        </div>
+
+        <div id="reports" class="page flex-col">
+            <h1 class="text-3xl font-bold mb-6 flex-shrink-0">Sales Reports</h1>
+            <div class="card flex-grow flex flex-col overflow-hidden">
+                <div class="flex flex-wrap justify-between items-center mb-4 no-print gap-4 flex-shrink-0">
+                    <div class="flex items-center gap-2">
+                        <button class="btn btn-sm btn-info" id="report-daily-btn">Today</button>
+                        <button class="btn btn-sm btn-info" id="report-weekly-btn">This Week</button>
+                        <button class="btn btn-sm btn-info" id="report-monthly-btn">This Month</button>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div><label for="report-start-date" class="text-sm">Start</label><input type="date" id="report-start-date" class="input-field p-2 text-sm"></div>
+                        <div><label for="report-end-date" class="text-sm">End</label><input type="date" id="report-end-date" class="input-field p-2 text-sm"></div>
+                        <button class="btn btn-primary btn-sm" id="report-filter-btn">Filter</button>
+                    </div>
+                     <div class="flex items-center gap-2">
+                        <label for="report-type-select" class="text-sm">Report by:</label>
+                        <select id="report-type-select" class="input-field p-2 text-sm">
+                            <option value="invoice">Invoice</option>
+                            <option value="brand">Brand</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button id="print-report-btn" class="btn bg-gray-600"><i class="fas fa-print mr-2"></i>Print</button>
+                        <button id="download-report-pdf-btn" class="btn bg-blue-700"><i class="fas fa-file-pdf mr-2"></i>Download</button>
+                    </div>
+                </div>
+                <div id="report-print-area" class="report-printable flex-grow overflow-y-auto">
+                    <h2 id="report-title" class="text-center text-3xl font-bold my-4">Sales Summary Report</h2>
+                    <div class="grid grid-cols-3 gap-4 my-6">
+                        <div class="card text-center"><p>Net Sales</p><p id="report-total-sales" class="text-2xl font-bold">₨0.00</p></div>
+                        <div class="card text-center"><p>Net Profit</p><p id="report-total-profit" class="text-2xl font-bold text-green-600">₨0.00</p></div>
+                        <div class="card text-center"><p>Total Bills/Items</p><p id="report-total-bills" class="text-2xl font-bold">0</p></div>
+                    </div>
+                    <div class="overflow-x-auto"><table class="w-full text-left"><thead id="report-table-head" class="sticky top-0 z-10" style="background-color: var(--bg-modal-darker);"></thead><tbody id="report-transactions-table"></tbody></table></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Day-End Report Page -->
+        <div id="day-end-report" class="page flex-col">
+            <h1 class="text-3xl font-bold mb-6 flex-shrink-0 no-print">Daily Expense & Sales Report</h1>
+            <div class="card flex-grow flex flex-col overflow-hidden">
+                <div class="flex flex-wrap justify-between items-center mb-4 no-print gap-4 flex-shrink-0">
+                    <div class="flex items-center gap-4">
+                        <div><label for="dayend-date" class="text-sm">Select Date</label><input type="date" id="dayend-date" class="input-field p-2 text-sm"></div>
+                        <button class="btn btn-primary btn-sm" id="dayend-filter-btn">Generate Report</button>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button id="print-dayend-report-btn" class="btn bg-gray-600"><i class="fas fa-print mr-2"></i>Print</button>
+                        <button id="download-dayend-report-pdf-btn" class="btn bg-blue-700"><i class="fas fa-file-pdf mr-2"></i>Download</button>
+                    </div>
+                </div>
+                <div id="dayend-report-print-area" class="report-printable flex-grow overflow-y-auto p-1">
+                    <h2 id="dayend-report-title" class="text-center text-3xl font-bold my-4">Daily Report</h2>
+                    
+                    <!-- 1. Summary Table -->
+                    <div class="mb-6">
+                        <h3 class="report-section-title">Summary</h3>
+                        <table class="report-table summary-table">
+                            <tbody>
+                                <tr>
+                                    <td><strong>Opening Cash:</strong></td>
+                                    <td id="dr-opening-cash">₨0.00 (Manual Entry)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Total Sales:</strong></td>
+                                    <td id="dr-total-sales" class="text-green-600">₨0.00</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Total Purchases (Paid):</strong></td>
+                                    <td id="dr-total-purchases" class="text-red-400">₨0.00</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Total Expenses:</strong></td>
+                                    <td id="dr-total-expenses" class="text-red-400">₨0.00</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Credit Given (to Customers):</strong></td>
+                                    <td id="dr-credit-given">₨0.00</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Credit Taken (from Suppliers):</strong></td>
+                                    <td id="dr-credit-taken">₨0.00</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Returned Items Value:</strong></td>
+                                    <td id="dr-returned-value">₨0.00</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Expired Product Loss:</strong></td>
+                                    <td><span id="dr-expired-loss" class="highlight-red">₨0.00</span></td>
+                                </tr>
+                                <tfoot class="font-bold text-lg">
+                                    <tr>
+                                        <td><strong>Closing Cash (Calculated):</strong></td>
+                                        <td><span id="dr-closing-cash" class="highlight-green">₨0.00</span></td>
+                                    </tr>
+                                </tfoot>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 2. Sales Breakdown -->
+                    <div class="mb-6">
+                        <h3 class="report-section-title">Sales Breakdown by Category</h3>
+                        <div class="responsive-table-container">
+                            <table class="report-table">
+                                <thead><tr><th>Category</th><th class="text-center">Quantity Sold</th><th class="text-right">Amount</th></tr></thead>
+                                <tbody id="dr-sales-breakdown"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 3. Purchases Breakdown -->
+                    <div class="mb-6">
+                        <h3 class="report-section-title">Purchases Breakdown</h3>
+                        <div class="responsive-table-container">
+                            <table class="report-table">
+                                <thead><tr><th>Supplier</th><th>Items Purchased</th><th class="text-right">Amount</th><th>Payment Type</th></tr></thead>
+                                <tbody id="dr-purchases-breakdown"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 4. Expense Details -->
+                    <div class="mb-6">
+                        <h3 class="report-section-title">Expense Details</h3>
+                        <div class="responsive-table-container">
+                            <table class="report-table">
+                                <thead><tr><th>Expense Type</th><th class="text-right">Amount</th><th>Remarks</th></tr></thead>
+                                <tbody id="dr-expense-details"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 5. Credit Transactions -->
+                    <div class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h3 class="report-section-title">Credit Given to Customers</h3>
+                            <div class="responsive-table-container">
+                                <table class="report-table">
+                                    <thead><tr><th>Customer Name</th><th class="text-right">Amount</th></tr></thead>
+                                    <tbody id="dr-credit-given-details"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="report-section-title">Credit Taken from Suppliers</h3>
+                             <div class="responsive-table-container">
+                                <table class="report-table">
+                                    <thead><tr><th>Supplier Name</th><th class="text-right">Amount</th></tr></thead>
+                                    <tbody id="dr-credit-taken-details"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 6. Losses & Returns -->
+                    <div class="mb-6">
+                        <h3 class="report-section-title">Losses & Returns</h3>
+                        <div class="responsive-table-container">
+                            <table class="report-table">
+                                <thead><tr><th>Type</th><th>Product/Invoice</th><th class="text-center">Quantity</th><th class="text-right">Amount (Cost Value)</th></tr></thead>
+                                <tbody id="dr-losses-returns"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div id="settings" class="page">
+            <h1 class="text-3xl font-bold mb-6">Settings</h1>
+            <div class="card max-w-2xl mx-auto">
+                <div class="mb-6 p-4 rounded-lg" style="background-color: var(--bg-modal-darker);">
+                    <p class="text-sm" style="color: var(--text-secondary);">Logged in as:</p>
+                    <p id="logged-in-email" class="text-lg font-semibold"></p>
+                </div>
+                <form id="settings-form" class="space-y-6">
+                    <div><label for="setting-store-name" class="font-medium">Store Name (for receipts)</label><input type="text" id="setting-store-name" class="input-field mt-1" placeholder="My Awesome Store"></div>
+                    <div><label for="setting-contact-number" class="font-medium">Store Contact</label><input type="text" id="setting-contact-number" class="input-field mt-1"></div>
+                    <div><label for="setting-email" class="font-medium">Store Email</label><input type="email" id="setting-email" class="input-field mt-1"></div>
+                    <div>
+                        <label for="setting-discount-type" class="font-medium">Default Discount Type</label>
+                        <select id="setting-discount-type" class="input-field mt-1">
+                            <option value="amount">Amount (₨)</option>
+                            <option value="percent">Percentage (%)</option>
+                        </select>
+                    </div>
+                    <div class="pt-4"><button type="submit" class="btn btn-primary"><i class="fas fa-save mr-2"></i>Save Settings</button></div>
+                </form>
+                <div class="mt-8 pt-6 border-t text-center" style="border-color: var(--border-color);">
+                    <p class="mb-3" style="color: var(--text-secondary);">For software updates or support, contact the developer:</p>
+                    <a href="https://wa.me/923139071038" target="_blank" class="btn btn-success">
+                        <i class="fab fa-whatsapp mr-2"></i>Contact on WhatsApp
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Right Cart Sidebar -->
+    <aside id="cart-sidebar" class="no-print text-slate-200">
+        <div class="p-4 flex justify-between items-center h-20 border-b" style="border-color: var(--border-sidebar);"> <h2 class="text-2xl font-bold">Current Sale</h2> <button id="cart-close-btn" class="text-2xl hover:text-red-500 transition-colors">&times;</button> </div>
+        <div id="cart-items" class="p-4 space-y-3 flex-grow overflow-y-auto"></div>
+        <div class="p-4 border-t space-y-3" style="border-color: var(--border-sidebar);">
+            <div class="flex justify-between font-medium"><span>Subtotal</span><span id="cart-subtotal">₨0.00</span></div>
+            <div class="flex justify-between items-center font-medium">
+                <label for="cart-discount-value" id="cart-discount-label">Discount (₨)</label>
+                <input type="number" id="cart-discount-value" value="0" class="input-field w-28 text-right bg-transparent" min="0">
+            </div>
+            <div class="flex justify-between font-bold text-2xl border-t pt-2 mt-2" style="border-color: var(--border-sidebar);"><span>Total</span><span id="cart-total">₨0.00</span></div>
+            <div class="mt-4"><label for="pos-customer-input" class="font-medium">Customer Name</label><input type="text" id="pos-customer-input" placeholder="Walk-in Customer" class="input-field mt-1"></div>
+        </div>
+        <div class="grid grid-cols-2 gap-3 p-4">
+            <button id="hold-sale-btn" class="btn btn-info w-full text-lg"><i class="fas fa-pause mr-2"></i>Hold</button>
+            <button id="cancel-sale-btn" class="btn btn-danger w-full text-lg"><i class="fas fa-times mr-2"></i>Cancel</button>
+            <button id="credit-sale-btn" class="btn btn-warning w-full text-lg"><i class="fas fa-book mr-2"></i>Credit</button>
+            <button id="complete-sale-btn" class="btn btn-success w-full text-lg"><i class="fas fa-check-circle mr-2"></i>Finalize</button>
+        </div>
+    </aside>
+</div>
+
+<!-- All Modals -->
+<div id="invoice-modal" class="modal-overlay no-print printable-modal"> 
+    <div class="modal-content max-w-sm w-full" style="background-color: var(--bg-modal); color: var(--text-modal);">
+        <div id="invoice-print-area-wrapper" class="printable-wrapper p-4">
+            <div id="invoice-print-area" class="printable-area">
+                <div class="text-center mb-4"> 
+                    <i class="fas fa-store text-blue-500 text-3xl mb-1"></i>
+                    <h2 id="receipt-store-name" class="text-xl font-extrabold tracking-wider">Store Name</h2> 
+                    <p id="receipt-store-contact" class="text-xs"></p> 
+                    <p id="receipt-store-email" class="text-xs"></p> 
+                </div> 
+                <hr class="my-2 border-dashed"> 
+                <div class="text-xs mb-2 space-y-1"> 
+                    <div class="flex justify-between"><strong>Invoice:</strong> <span id="invoice-id"></span></div> 
+                    <div class="flex justify-between"><strong>Customer:</strong> <span id="invoice-customer-name"></span></div> 
+                    <div class="flex justify-between"><strong>Date:</strong> <span id="invoice-date"></span></div> 
+                </div> 
+                <hr class="my-2 border-dashed"> 
+                <table class="w-full text-xs mb-2"> 
+                    <thead> 
+                        <tr class="border-b-2 border-dashed"> 
+                            <th class="text-left py-1">ITEM</th> 
+                            <th class="text-center">QTY</th> 
+                            <th class="text-right">PRICE</th> 
+                            <th class="text-right">TOTAL</th> 
+                        </tr> 
+                    </thead> 
+                    <tbody id="invoice-items" class="divide-y divide-dashed"></tbody> 
+                </table> 
+                <hr class="my-2 border-dashed"> 
+                <div class="text-xs space-y-1"> 
+                    <div class="flex justify-between"><span>Subtotal:</span><span id="invoice-subtotal"></span></div> 
+                    <div class="flex justify-between"><span>Discount:</span><span id="invoice-discount"></span></div> 
+                    <div class="flex justify-between font-bold text-base border-t-2 border-dashed mt-1 pt-1"><span>Grand Total:</span><span id="invoice-total"></span></div> 
+                </div> 
+                <p class="text-center text-xs mt-4">Thank you for your visit!</p> 
+            </div>
+        </div>
+        <div class="flex justify-end gap-3 p-4 rounded-b-lg no-print" style="background-color: var(--bg-modal-darker);"> 
+            <button id="print-invoice-btn" class="btn bg-gray-600 text-white"><i class="fas fa-print mr-2"></i>Print</button> 
+            <button id="download-invoice-pdf-btn" class="btn btn-primary"><i class="fas fa-file-pdf mr-2"></i>Download PDF</button> 
+            <button id="close-invoice-btn" class="btn btn-danger"><i class="fas fa-times mr-2"></i>Close</button> 
+        </div> 
+    </div> 
+</div>
+
+<!-- Customer Modal (for Add/Edit) -->
+<div id="customer-modal" class="modal-overlay no-print">
+    <div class="modal-content">
+        <h2 id="customer-modal-title" class="text-2xl font-bold mb-4">Add New Customer</h2>
+        <form id="customer-form" class="space-y-4">
+            <input type="hidden" id="edit-customer-id">
+            <div><label class="font-medium">Customer Name</label><input type="text" id="customer-name-input" class="input-field" required></div>
+            <div><label class="font-medium">Phone</label><input type="tel" id="customer-phone-input" class="input-field"></div>
+            <div><label class="font-medium">CNIC</label><input type="text" id="customer-cnic-input" class="input-field"></div>
+            <div><label class="font-medium">Address</label><input type="text" id="customer-address-input" class="input-field"></div>
+            <div class="flex justify-end gap-3 pt-4">
+                <button type="button" id="cancel-customer-btn" class="btn btn-danger">Cancel</button>
+                <button type="submit" class="btn btn-success">Save Customer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Customer Selection Modal (for Credit Sale) -->
+<div id="credit-customer-select-modal" class="modal-overlay no-print">
+    <div class="modal-content">
+        <h2 class="text-2xl font-bold mb-4">Select Customer for Credit</h2>
+        <div id="credit-customer-list" class="space-y-2 max-h-72 overflow-y-auto">
+            <!-- Customer list will be populated here -->
+        </div>
+        <div class="flex justify-end pt-4 mt-4 border-t" style="border-color: var(--border-color);">
+             <button type="button" id="cancel-credit-select-btn" class="btn btn-danger">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Customer Ledger Modal -->
+<div id="customer-ledger-modal" class="modal-overlay no-print printable-modal">
+    <div class="modal-content max-w-4xl flex flex-col max-h-[90vh]">
+        <div id="customer-ledger-printable-area" class="ledger-printable flex-shrink-0">
+            <h2 class="text-2xl font-bold mb-1">Customer Ledger</h2>
+            <p class="mb-4"><strong>Customer:</strong> <span id="ledger-customer-name"></span></p>
+        </div>
+        <div class="flex-grow overflow-y-auto">
+             <table class="w-full text-left text-sm">
+                <thead class="sticky top-0 z-10" style="background-color: var(--bg-modal-darker);">
+                    <tr>
+                        <th class="p-2">Date</th>
+                        <th>Description</th>
+                        <th class="text-right">Debit</th>
+                        <th class="text-right">Credit</th>
+                        <th class="text-right">Balance</th>
+                    </tr>
+                </thead>
+                <tbody id="customer-ledger-table-body">
+                    <!-- Ledger entries go here -->
+                </tbody>
+            </table>
+        </div>
+        <div class="flex justify-end gap-3 pt-4 mt-4 border-t no-print flex-shrink-0" style="border-color: var(--border-color);">
+            <button id="print-ledger-btn" class="btn bg-gray-600 text-white"><i class="fas fa-print mr-2"></i>Print Ledger</button>
+            <button id="download-ledger-pdf-btn" class="btn btn-primary"><i class="fas fa-file-pdf mr-2"></i>Download PDF</button>
+            <button type="button" id="cancel-ledger-btn" class="btn btn-danger">Close</button>
+        </div>
+    </div>
+</div>
+
+
+<!-- Purchase Modal -->
+<div id="purchase-modal" class="modal-overlay no-print">
+    <div class="modal-content max-w-4xl flex flex-col max-h-[90vh]">
+        <h2 id="purchase-modal-title" class="text-2xl font-bold mb-4 flex-shrink-0">Add Supplier Purchase</h2>
+        <div class="flex-grow overflow-y-auto pr-2">
+            <form id="purchase-form" class="space-y-4">
+                <input type="hidden" id="editing-purchase-id">
+                <!-- Supplier Info -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-b pb-4" style="border-color: var(--border-color);">
+                    <div><label class="font-medium">Supplier Name</label><input type="text" id="purchase-supplier-name" class="input-field" required></div>
+                    <div><label class="font-medium">Contact</label><input type="tel" id="purchase-supplier-contact" class="input-field"></div>
+                    <div><label class="font-medium">Date</label><input type="date" id="purchase-date" class="input-field" required></div>
+                </div>
+
+                <!-- Product Items List -->
+                <h3 class="text-xl font-semibold mt-4">Products</h3>
+                <div id="purchase-items-container" class="space-y-2 p-2 rounded" style="background-color: var(--bg-modal-darker);">
+                    <!-- Product rows will be injected here by JS -->
+                </div>
+                <div class="flex gap-2">
+                    <button type="button" id="add-purchase-item-row" class="btn btn-info btn-sm mt-2"><i class="fas fa-plus mr-2"></i>Add Product Row</button>
+                    <button type="button" id="open-new-product-submodal-btn" class="btn btn-warning btn-sm mt-2"><i class="fas fa-box mr-2"></i>Create New Product</button>
+                </div>
+
+                <!-- Financial Summary -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-t pt-4 mt-4" style="border-color: var(--border-color);">
+                    <div class="p-2 rounded-lg text-center" style="background-color: var(--bg-modal-darker);"><label class="font-medium">Total Bill</label><div id="purchase-total-amount" class="text-2xl font-bold mt-1">₨0.00</div></div>
+                    <div><label class="font-medium">Amount Paid</label><input type="number" id="purchase-amount-paid" class="input-field" required value="0" min="0" step="0.01"></div>
+                    <div class="p-2 rounded-lg text-center" style="background-color: var(--bg-modal-darker);"><label class="font-medium">Remaining</label><div id="purchase-amount-remaining" class="text-xl font-bold text-red-400 mt-1">₨0.00</div></div>
+                </div>
+            </form>
+        </div>
+        <div class="flex justify-end gap-3 pt-4 flex-shrink-0">
+            <button type="button" id="cancel-purchase-btn" class="btn btn-danger">Cancel</button>
+            <button type="submit" form="purchase-form" class="btn btn-success">Save Purchase</button>
+        </div>
+        <datalist id="products-datalist"></datalist>
+    </div>
+</div>
+
+
+<!-- New Product Sub-Modal (for inside Purchase Modal) -->
+<div id="new-product-submodal" class="modal-overlay no-print">
+    <div class="modal-content max-w-lg">
+        <h2 class="text-2xl font-bold mb-4">Add New Product to System</h2>
+        <form id="new-product-subform" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                 <div><label class="font-medium">Product Name</label><input type="text" id="sub-product-name" class="input-field" required></div>
+                 <div><label class="font-medium">Brand</label><select id="sub-product-brand" class="input-field"><option value="">-- No Brand --</option></select></div>
+                 <div><label class="font-medium">Selling Price</label><input type="number" id="sub-product-sell-price" class="input-field" required min="0" step="0.01"></div>
+                 <div><label class="font-medium">Category</label><select id="sub-product-category" class="input-field" required></select></div>
+                 <div><label class="font-medium">Expiry Date (Optional)</label><input type="date" id="sub-product-expiry" class="input-field"></div>
+                 <div><label class="font-medium">Group</label><select id="sub-product-group" class="input-field"><option value="">-- No Group --</option></select></div>
+                 <div><label class="font-medium">SKU / Model No.</label><input type="text" id="sub-product-sku" class="input-field"></div>
+            </div>
+             <div class="flex justify-end gap-3 pt-4">
+                <button type="button" id="cancel-sub-product-btn" class="btn btn-danger">Cancel</button>
+                <button type="submit" class="btn btn-primary">Create & Add</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Purchase Invoice Modal -->
+<div id="purchase-invoice-modal" class="modal-overlay no-print printable-modal">
+    <div class="modal-content max-w-sm w-full" style="background-color: var(--bg-modal); color: var(--text-modal);">
+        <div id="purchase-invoice-print-area-wrapper" class="printable-wrapper p-4">
+            <div id="purchase-invoice-print-area" class="printable-area">
+                <div class="text-center mb-4">
+                    <h2 class="text-xl font-extrabold tracking-wider">PURCHASE INVOICE</h2>
+                    <p id="purchase-receipt-store-name" class="font-bold">Store Name</p> 
+                </div>
+                <hr class="my-2 border-dashed">
+                <div class="text-xs mb-2 space-y-1">
+                    <div class="flex justify-between"><strong>Purchase ID:</strong> <span id="purchase-invoice-id"></span></div>
+                    <div class="flex justify-between"><strong>Supplier:</strong> <span id="purchase-invoice-supplier-name"></span></div>
+                    <div class="flex justify-between"><strong>Date:</strong> <span id="purchase-invoice-date"></span></div>
+                </div>
+                <hr class="my-2 border-dashed">
+                <table class="w-full text-xs mb-2">
+                    <thead>
+                        <tr class="border-b-2 border-dashed">
+                            <th class="text-left py-1">ITEM</th>
+                            <th class="text-center">QTY</th>
+                            <th class="text-right">COST</th>
+                            <th class="text-right">TOTAL</th>
+                        </tr>
+                    </thead>
+                    <tbody id="purchase-invoice-items" class="divide-y divide-dashed"></tbody>
+                </table>
+                <hr class="my-2 border-dashed">
+                <div class="text-xs space-y-1">
+                    <div class="flex justify-between"><span>Total Bill:</span><span id="purchase-invoice-total"></span></div>
+                    <div class="flex justify-between"><span>Amount Paid:</span><span id="purchase-invoice-paid"></span></div>
+                    <div class="flex justify-between font-bold text-base border-t-2 border-dashed mt-1 pt-1"><span>Remaining:</span><span id="purchase-invoice-remaining"></span></div>
+                </div>
+            </div>
+        </div>
+        <div class="flex justify-end gap-3 p-4 rounded-b-lg no-print" style="background-color: var(--bg-modal-darker);">
+            <button id="print-purchase-invoice-btn" class="btn bg-gray-600 text-white"><i class="fas fa-print mr-2"></i>Print</button>
+            <button id="download-purchase-invoice-pdf-btn" class="btn btn-primary"><i class="fas fa-file-pdf mr-2"></i>Download PDF</button>
+            <button id="close-purchase-invoice-btn" class="btn btn-danger"><i class="fas fa-times mr-2"></i>Close</button>
+        </div>
+    </div>
+</div>
+
+
+<div id="edit-product-modal" class="modal-overlay no-print"> 
+    <div class="modal-content"> 
+        <h2 class="text-2xl font-bold mb-4">Edit Product</h2> 
+        <form id="edit-product-form" class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end"> 
+            <input type="hidden" id="edit-product-id"> 
+            <div class="md:col-span-2"><label class="font-medium">Name</label><input type="text" id="edit-product-name" class="input-field" required></div>
+            <div><label class="font-medium">Brand</label><select id="edit-product-brand" class="input-field"><option value="">-- No Brand --</option></select></div>
+            <div><label class="font-medium">SKU / Model No.</label><input type="text" id="edit-product-sku" class="input-field"></div> 
+            <div><label class="font-medium">Category</label><select id="edit-product-category" class="input-field" required></select></div> 
+            <div><label class="font-medium">Group</label><select id="edit-product-group" class="input-field"><option value="">-- No Group --</option></select></div> 
+            <div><label class="font-medium">Cost Price</label><input type="number" id="edit-product-cost-price" class="input-field" required min="0" step="0.01"></div> 
+            <div><label class="font-medium">Sell Price</label><input type="number" id="edit-product-sell-price" class="input-field" required min="0" step="0.01"></div> 
+            <div><label class="font-medium">Stock</label><input type="number" id="edit-product-stock" class="input-field" required min="0"></div> 
+            <div><label class="font-medium">Expiry Date</label><input type="date" id="edit-product-expiry" class="input-field"></div> 
+            <div class="md:col-span-2"><label class="font-medium">Change Image</label><input type="file" id="edit-product-image" class="input-field" accept="image/*"></div>
+            <div class="md:col-span-2 flex justify-end gap-3 pt-4"> 
+                <button type="button" id="cancel-edit-product-btn" class="btn btn-danger">Cancel</button> 
+                <button type="submit" class="btn btn-success">Save</button> 
+            </div> 
+        </form> 
+    </div> 
+</div>
+<div id="return-sale-modal" class="modal-overlay no-print"> <div class="modal-content max-w-2xl"> <h2 class="text-2xl font-bold mb-4">Return Items from Invoice <span id="return-invoice-id" class="text-yellow-400"></span></h2> <form id="return-sale-form"> <div id="return-items-list" class="space-y-3 max-h-72 overflow-y-auto mb-4 p-2 rounded-lg" style="background-color: var(--bg-modal-darker);"></div> <div class="flex justify-end gap-3 pt-4 border-t" style="border-color: var(--border-color);"><button type="button" id="cancel-return-btn" class="btn btn-danger">Cancel</button> <button type="submit" class="btn btn-warning">Process Return</button> </div> </form> </div> </div>
+
+<!-- Settle Credit Modal -->
+<div id="settle-credit-modal" class="modal-overlay no-print">
+  <div class="modal-content">
+    <h2 class="text-2xl font-bold mb-4">Settle Customer Account</h2>
+    <form id="settle-credit-form" class="space-y-4">
+      <input type="hidden" id="settle-customer-id">
+      <div>Customer: <strong id="settle-customer-name"></strong></div>
+      <div>Amount Due: <strong id="settle-amount-due" class="text-red-400"></strong></div>
+      <hr class="border-slate-600">
+      <div>
+        <label class="font-medium">Amount Paid</label>
+        <input type="number" id="settle-amount-paid" class="input-field" required min="0.01" step="0.01">
+      </div>
+      <div>Remaining: <strong id="settle-amount-remaining" class="text-yellow-400"></strong></div>
+      <div class="flex justify-end gap-3 pt-4">
+        <button type="button" id="cancel-settle-credit-btn" class="btn btn-danger">Cancel</button>
+        <button type="submit" class="btn btn-success">Save Payment</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- View Products by Brand Modal -->
+<div id="brand-products-modal" class="modal-overlay no-print">
+    <div class="modal-content max-w-2xl">
+        <h2 class="text-2xl font-bold mb-4">Products in Brand: <span id="brand-products-modal-title" class="text-blue-400"></span></h2>
+        <div id="brand-products-list" class="max-h-96 overflow-y-auto">
+            <!-- Products will be listed here -->
+        </div>
+        <div class="flex justify-end pt-4 mt-4 border-t" style="border-color: var(--border-color);">
+             <button type="button" id="close-brand-products-btn" class="btn btn-danger">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- View Brand Details Modal -->
+<div id="brand-details-modal" class="modal-overlay no-print">
+    <div class="modal-content">
+        <h2 class="text-2xl font-bold mb-4">Brand Details</h2>
+        <div class="space-y-3">
+            <div><strong>Name:</strong> <span id="detail-brand-name"></span></div>
+            <div><strong>Details:</strong> <span id="detail-brand-details"></span></div>
+            <div><strong>Description:</strong> <p id="detail-brand-description" class="p-2 rounded" style="background-color: var(--bg-modal-darker);"></p></div>
+            <div><strong>Notes:</strong> <p id="detail-brand-notes" class="p-2 rounded" style="background-color: var(--bg-modal-darker);"></p></div>
+        </div>
+        <div class="flex justify-end pt-4 mt-4 border-t" style="border-color: var(--border-color);">
+             <button type="button" id="close-brand-details-btn" class="btn btn-danger">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Staff Modal -->
+<div id="edit-staff-modal" class="modal-overlay no-print">
+    <div class="modal-content">
+        <h2 class="text-2xl font-bold mb-4">Edit Staff Member</h2>
+        <form id="edit-staff-form">
+            <input type="hidden" id="edit-staff-id">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                <div><label class="font-medium">Full Name</label><input type="text" id="edit-staff-name" class="input-field" required></div>
+                <div><label class="font-medium">Phone</label><input type="tel" id="edit-staff-phone" class="input-field"></div>
+                <div><label class="font-medium">Position</label><input type="text" id="edit-staff-position" class="input-field" required></div>
+                <div><label class="font-medium">Salary</label><input type="number" id="edit-staff-salary" class="input-field" required min="0"></div>
+                <div><label class="font-medium">Joining Date</label><input type="date" id="edit-staff-joining-date" class="input-field" required></div>
+                <div>
+                    <label class="font-medium">Status</label>
+                    <select id="edit-staff-status" class="input-field" required>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex justify-end gap-3 pt-4 mt-4 border-t" style="border-color: var(--border-color);">
+                <button type="button" id="cancel-edit-staff-btn" class="btn btn-danger">Cancel</button>
+                <button type="submit" class="btn btn-success">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Pay Salary Modal -->
+<div id="pay-salary-modal" class="modal-overlay no-print">
+    <div class="modal-content">
+        <h2 class="text-2xl font-bold mb-4">Pay Salary</h2>
+        <form id="pay-salary-form">
+            <input type="hidden" id="pay-salary-staff-id">
+            <div class="space-y-4">
+                <p><strong>Staff Member:</strong> <span id="pay-salary-staff-name"></span></p>
+                <p><strong>Monthly Salary:</strong> <span id="pay-salary-staff-salary"></span></p>
+                <hr style="border-color: var(--border-color);">
+                <div><label class="font-medium">Salary for Month</label><input type="month" id="pay-salary-month" class="input-field" required></div>
+                <div><label class="font-medium">Amount Paid</label><input type="number" id="pay-salary-amount" class="input-field" required min="0" step="0.01"></div>
+                <div><label class="font-medium">Payment Date</label><input type="date" id="pay-salary-date" class="input-field" required></div>
+                <div><label class="font-medium">Notes (Optional)</label><textarea id="pay-salary-notes" class="input-field" rows="2"></textarea></div>
+            </div>
+            <div class="flex justify-end gap-3 pt-4 mt-4 border-t" style="border-color: var(--border-color);">
+                <button type="button" id="cancel-pay-salary-btn" class="btn btn-danger">Cancel</button>
+                <button type="submit" class="btn btn-success"><i class="fas fa-hand-holding-usd mr-2"></i>Confirm Payment</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Expense Modal -->
+<div id="edit-expense-modal" class="modal-overlay no-print">
+    <div class="modal-content">
+        <h2 class="text-2xl font-bold mb-4">Edit Expense</h2>
+        <form id="edit-expense-form">
+            <input type="hidden" id="edit-expense-id">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                <div><label class="font-medium">Expense Title</label><input type="text" id="edit-expense-title" class="input-field" required></div>
+                <div>
+                    <label class="font-medium">Category</label>
+                    <select id="edit-expense-category" class="input-field" required>
+                        <option value="Rent">Rent</option>
+                        <option value="Utilities">Utilities (Bills)</option>
+                        <option value="Maintenance">Maintenance</option>
+                        <option value="Marketing">Marketing</option>
+                        <option value="Miscellaneous">Miscellaneous</option>
+                    </select>
+                </div>
+                <div><label class="font-medium">Amount</label><input type="number" id="edit-expense-amount" class="input-field" required min="0" step="0.01"></div>
+                <div><label class="font-medium">Date</label><input type="date" id="edit-expense-date" class="input-field" required></div>
+                <div class="md:col-span-2"><label class="font-medium">Notes (Optional)</label><textarea id="edit-expense-notes" class="input-field" rows="2"></textarea></div>
+            </div>
+            <div class="flex justify-end gap-3 pt-4 mt-4 border-t" style="border-color: var(--border-color);">
+                <button type="button" id="cancel-edit-expense-btn" class="btn btn-danger">Cancel</button>
+                <button type="submit" class="btn btn-success">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+  import { getDatabase, ref, onValue, off, set, push, update, remove, runTransaction, get } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
+
+  // --- Firebase Configuration ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyBdm5Ot1bjCq6Ytrul9L2UQo61oSmSeaa0",
+    authDomain: "student-program-e6ed4.firebaseapp.com",
+    databaseURL: "https://student-program-e6ed4-default-rtdb.firebaseio.com",
+    projectId: "student-program-e6ed4",
+    storageBucket: "student-program-e6ed4.firebasestorage.app",
+    messagingSenderId: "466600750135",
+    appId: "1:466600750135:web:a5f034144278156ef0a3b2"
+  };
+
+  // --- Initialize Firebase ---
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const database = getDatabase(app);
+
+  // --- Global State ---
+  let currentUserUID = null;
+  let currentUserEmail = null;
+  let dbRefs = {};
+  let dbListeners = [];
+  let invoiceActionTaken = false; 
+  let sidebarPreCartStateIsCollapsed = false;
+
+document.addEventListener('DOMContentLoaded', () => {
+    
+    const loginContainer = document.getElementById('login-container');
+    const appLayout = document.getElementById('app-layout');
+    const loginForm = document.getElementById('login-form');
+    const loginError = document.getElementById('login-error');
+    const logoutBtn = document.getElementById('logout-btn');
+
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            currentUserUID = user.uid;
+            currentUserEmail = user.email;
+            loginContainer.classList.add('hidden');
+            appLayout.classList.remove('hidden');
+            initAppForUser();
+        } else {
+            currentUserUID = null;
+            currentUserEmail = null;
+            loginContainer.classList.remove('hidden');
+            appLayout.classList.add('hidden');
+            cleanupListeners();
+        }
+    });
+
+    loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = loginForm['email-address'].value;
+        const password = loginForm['password'].value;
+        loginError.textContent = ''; 
+        signInWithEmailAndPassword(auth, email, password)
+            .catch((error) => {
+                const errorCode = error.code;
+                console.error("Login Error:", errorCode);
+                if (errorCode === 'auth/user-not-found' || errorCode === 'auth/wrong-password' || errorCode === 'auth/invalid-credential') {
+                    loginError.textContent = 'Invalid email or password.';
+                } else {
+                    loginError.textContent = 'An error occurred during login.';
+                }
+            });
+    });
+
+    logoutBtn.addEventListener('click', () => {
+        signOut(auth).catch((error) => console.error('Logout Error', error));
+    });
+    
+    function cleanupListeners() {
+        dbListeners.forEach(l => off(l.ref, l.type));
+        dbListeners = [];
+    }
+
+    // --- THEME SWITCHER LOGIC ---
+    const themeSwitcherBtn = document.getElementById('theme-switcher-btn');
+    const themeMenu = document.getElementById('theme-menu');
+    
+    const setTheme = (theme) => {
+        document.body.classList.remove('dark', 'light-pink');
+        if (theme === 'dark' || theme === 'light-pink') {
+            document.body.classList.add(theme);
+        }
+        localStorage.setItem('pos-theme', theme);
+        themeMenu.classList.add('hidden'); // Hide menu after selection
+    };
+
+    themeSwitcherBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        themeMenu.classList.toggle('hidden');
+    });
+
+    document.addEventListener('click', () => {
+        if (!themeMenu.classList.contains('hidden')) {
+            themeMenu.classList.add('hidden');
+        }
+    });
+
+    document.querySelectorAll('.theme-option').forEach(option => {
+        option.addEventListener('click', (e) => {
+            e.preventDefault();
+            setTheme(e.target.dataset.theme);
+        });
+    });
+    
+    // Apply saved theme on load
+    const savedTheme = localStorage.getItem('pos-theme') || 'dark'; // Default to dark
+    setTheme(savedTheme);
+
+
+    async function initAppForUser() {
+        if (!currentUserUID) return;
+        
+        dbRefs = {
+            products: ref(database, `data/${currentUserUID}/products`),
+            groups: ref(database, `data/${currentUserUID}/groups`),
+            brands: ref(database, `data/${currentUserUID}/brands`),
+            sales: ref(database, `data/${currentUserUID}/sales`),
+            settings: ref(database, `data/${currentUserUID}/settings`),
+            customers: ref(database, `data/${currentUserUID}/customers`),
+            purchases: ref(database, `data/${currentUserUID}/purchases`),
+            holdBills: ref(database, `data/${currentUserUID}/holdBills`),
+            staff: ref(database, `data/${currentUserUID}/staff`),
+            expenses: ref(database, `data/${currentUserUID}/expenses`),
+        };
+
+        // Seed initial data for new users
+        await seedInitialData();
+
+        const CATEGORIES = [
+            { name: 'Electronics', color: '#93C5FD' }, { name: 'Groceries', color: '#BEF264' }, { name: 'Apparel', color: '#FDBA74' }, 
+            { name: 'Health & Pharma', color: '#FCA5A5' }, { name: 'Books & Stationery', color: '#D8B4FE' }, { name: 'Home Goods', color: '#67E8F9' }, { name: 'General', color: '#E5E7EB' },
+        ];
+        
+        let state = { products: [], sales: [], cart: [], settings: { discountType: 'amount' }, customers: [], purchases: [], groups: [], brands: [], holdBills: [], staff: [], expenses: [], currentPurchaseItems: [], editingPurchaseOriginalItems: [], activeCategory: 'All', activeGroup: 'All', activeBrand: 'All' };
+        const formatCurrency = (amount) => `₨${(parseFloat(amount) || 0).toFixed(2)}`;
+        const getCategoryColor = (categoryName) => CATEGORIES.find(c => c.name === categoryName)?.color || '#D1D5DB';
+        
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggleBtn = document.getElementById('sidebar-toggle');
+        
+        const updateSidebarToggleIcon = () => {
+            const icon = sidebarToggleBtn.querySelector('i');
+            if (sidebar.classList.contains('collapsed')) {
+                icon.classList.remove('fa-chevron-left'); icon.classList.add('fa-chevron-right');
+            } else {
+                icon.classList.add('fa-chevron-left'); icon.classList.remove('fa-chevron-right');
+            }
+        };
+
+        const openCartSidebar = () => {
+            sidebarPreCartStateIsCollapsed = sidebar.classList.contains('collapsed');
+            sidebar.classList.add('collapsed');
+            updateSidebarToggleIcon();
+            document.getElementById('cart-sidebar').classList.add('open');
+            document.getElementById('app-layout').classList.add('cart-open');
+        };
+
+        const closeCartSidebar = () => {
+            document.getElementById('cart-sidebar').classList.remove('open');
+            document.getElementById('app-layout').classList.remove('cart-open');
+            if (!sidebarPreCartStateIsCollapsed) {
+                sidebar.classList.remove('collapsed');
+            }
+            updateSidebarToggleIcon();
+        };
+
+        const showPage = (pageId) => {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId)?.classList.add('active');
+            document.querySelectorAll('.nav-link[data-page]').forEach(l => l.classList.remove('active'));
+            document.querySelector(`.nav-link[data-page="${pageId}"]`)?.classList.add('active');
+            updateAllPages();
+            if (pageId === 'pos') { renderCategoryFilters(); renderGroupFilterDropdown(); renderBrandFilterDropdown(); }
+            if (pageId === 'settings') document.getElementById('logged-in-email').textContent = currentUserEmail;
+            if (pageId === 'reports' && !document.getElementById('report-transactions-table').innerHTML) { 
+                document.getElementById('report-daily-btn').click(); 
+            }
+             if (pageId === 'day-end-report') {
+                document.getElementById('dayend-date').value = new Date().toISOString().split('T')[0];
+                renderDayEndReport();
+            }
+            if (pageId === 'expenses') {
+                document.getElementById('expense-date').value = new Date().toISOString().split('T')[0];
+            }
+            if (pageId === 'staff-management') {
+                document.getElementById('staff-joining-date').value = new Date().toISOString().split('T')[0];
+            }
+            if (pageId === 'dashboard') {
+                document.getElementById('db-daily-btn').click();
+            }
+            if (pageId === 'financial-ledger' && !document.getElementById('financial-ledger-table-body').innerHTML) {
+                document.getElementById('ledger-daily-btn').click();
+            }
+        };
+        document.querySelectorAll('.nav-link[data-page]').forEach(link => link.addEventListener('click', e => { e.preventDefault(); showPage(link.dataset.page); }));
+        sidebarToggleBtn.addEventListener('click', () => {
+            if (document.getElementById('cart-sidebar').classList.contains('open')) return;
+            sidebar.classList.toggle('collapsed');
+            updateSidebarToggleIcon();
+        });
+        updateSidebarToggleIcon();
+        
+        function updateAllPages(){
+            const activePage = document.querySelector('.page.active')?.id;
+            if (activePage === 'dashboard') {
+                const start = document.getElementById('db-start-date').value;
+                const end = document.getElementById('db-end-date').value;
+                if(start && end) {
+                    updateDashboard(new Date(start), new Date(end));
+                } else {
+                    updateDashboard();
+                }
+            }
+            if (activePage === 'pos') renderPosProducts();
+            if (activePage === 'products') renderProductsTable();
+            if (activePage === 'financial-ledger') renderFinancialLedgerPage();
+            if (activePage === 'returned-bills') renderReturnedBillsPage();
+            if (activePage === 'customers') renderCustomersPage();
+            if (activePage === 'suppliers') renderPurchasesPage();
+            if (activePage === 'groups') renderGroupsPage();
+            if (activePage === 'brands') renderBrandsPage();
+            if (activePage === 'hold-bills') renderHoldBillsPage();
+            if (activePage === 'staff-management') renderStaffPage();
+            if (activePage === 'expenses') renderExpensesPage();
+            if (activePage === 'day-end-report') renderDayEndReport();
+        }
+        
+        function updateDashboard(startDate, endDate) {
+            const today = new Date();
+            if (!startDate) startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+            if (!endDate) endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+            startDate.setHours(0,0,0,0); endDate.setHours(23,59,59,999);
+
+            const filteredSales = state.sales.filter(s => { const saleDate = new Date(s.date); return saleDate >= startDate && saleDate <= endDate; });
+            const totalStockCost = state.products.reduce((sum, p) => sum + ((p.costPrice || 0) * (p.stock || 0)), 0);
+            const totalStockSell = state.products.reduce((sum, p) => sum + ((p.sellingPrice || 0) * (p.stock || 0)), 0);
+            const netSales = filteredSales.reduce((sum, s) => sum + (s.total || 0), 0);
+            const netProfit = filteredSales.reduce((sum, s) => sum + (s.profit || 0), 0);
+            
+            let totalReturnsValue = 0;
+            filteredSales.forEach(s => {
+                if (s.status === 'Returned' || s.status === 'Partially Returned') {
+                    totalReturnsValue += s.items.reduce((itemSum, item) => itemSum + ((item.returnedQty || 0) * item.sellingPrice), 0);
+                }
+            });
+
+            const totalCreditDue = state.customers.reduce((totalDue, customer) => {
+                const creditSalesTotal = state.sales.filter(s => s.customerId === customer.id && s.status === 'Credit').reduce((sum, s) => sum + s.total, 0);
+                const paymentsTotal = (customer.payments || []).reduce((sum, p) => sum + p.amount, 0);
+                return totalDue + (creditSalesTotal - paymentsTotal);
+            }, 0);
+
+            const creditReceivedInPeriod = state.customers.flatMap(c => c.payments || []).filter(p => { const pDate = new Date(p.date); return pDate >= startDate && pDate <= endDate; }).reduce((sum, p) => sum + p.amount, 0);
+
+            document.getElementById('total-stock-value-cost').textContent = formatCurrency(totalStockCost);
+            document.getElementById('total-stock-value-sell').textContent = formatCurrency(totalStockSell);
+            document.getElementById('todays-sales').textContent = formatCurrency(netSales);
+            document.getElementById('todays-profit').textContent = formatCurrency(netProfit);
+            document.getElementById('todays-returns').textContent = formatCurrency(totalReturnsValue);
+            document.getElementById('total-credit-due').textContent = formatCurrency(totalCreditDue);
+            document.getElementById('todays-credit-received').textContent = formatCurrency(creditReceivedInPeriod);
+            
+            const recentPurchases = state.purchases.filter(p => { const pDate = new Date(p.date); return pDate >= startDate && pDate <= endDate; }).sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
+            document.getElementById('recent-purchases-alerts').innerHTML = recentPurchases.map(p => `<div class="flex justify-between"><span>${p.supplierName}</span> <b class="text-slate-300">${formatCurrency(p.totalAmount)}</b></div>`).join('') || '<p class="text-gray-400">No purchases in this period.</p>';
+
+            const salesCount = filteredSales.filter(s => s.status !== "Returned" && s.status !== "Partially Returned").flatMap(s => s.items).reduce((acc, item) => { acc[item.name] = (acc[item.name] || 0) + item.quantity; return acc; }, {});
+            document.getElementById('top-selling-products').innerHTML = Object.entries(salesCount).sort((a,b) => b[1] - a[1]).slice(0, 10).map(([name, count]) => `<div class="flex justify-between"><span>${name}</span> <b>${count} sold</b></div>`).join('') || '<p class="text-gray-400">No sales in this period.</p>';
+            document.getElementById('low-stock-alerts').innerHTML = state.products.filter(p => p.stock > 0 && p.stock <= 10).map(p => `<div class="flex justify-between"><span>${p.name}</span> <b>${p.stock} left</b></div>`).join('') || '<p class="text-gray-400">No low stock products.</p>';
+            document.getElementById('out-of-stock-alerts').innerHTML = state.products.filter(p => p.stock <= 0).map(p => `<div class="flex justify-between"><span>${p.name}</span></div>`).join('') || '<p class="text-gray-400">All products are in stock.</p>';
+            
+            const thirtyDaysFromNow = new Date(); thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+            const now = new Date();
+            document.getElementById('expiring-soon-alerts').innerHTML = state.products.filter(p => p.expiryDate && new Date(p.expiryDate) <= thirtyDaysFromNow && new Date(p.expiryDate) >= now).sort((a,b) => new Date(a.expiryDate) - new Date(b.expiryDate)).map(p => `<div class="flex justify-between"><span>${p.name}</span> <b class="text-yellow-400">${p.expiryDate}</b></div>`).join('') || '<p class="text-gray-400">No products expiring soon.</p>';
+            document.getElementById('expired-products-alerts').innerHTML = state.products.filter(p => p.expiryDate && new Date(p.expiryDate) < now).map(p => `<div class="flex justify-between"><span>${p.name}</span> <b>${p.expiryDate}</b></div>`).join('') || '<p class="text-gray-400">No expired products.</p>';
+        }
+
+        async function renderPosProducts() {
+            const listEl = document.getElementById('product-list'); if (!listEl) return;
+            const search = document.getElementById('product-search').value.toLowerCase();
+            const categoryFiltered = state.activeCategory === 'All' ? state.products : state.products.filter(p => p.category === state.activeCategory);
+            const brandFiltered = state.activeBrand === 'All' ? categoryFiltered : categoryFiltered.filter(p => p.brandId === state.activeBrand);
+            const groupFiltered = state.activeGroup === 'All' ? brandFiltered : brandFiltered.filter(p => p.groupId === state.activeGroup);
+
+            const filtered = groupFiltered.filter(p => p.stock > 0 && (p.name.toLowerCase().includes(search) || (p.sku && p.sku.toLowerCase().includes(search)) || (p.brandName && p.brandName.toLowerCase().includes(search))));
+            
+            let html = '';
+            for (const p of filtered) {
+                const cartItem = state.cart.find(item => item.id === p.id);
+                const displayStock = p.stock - (cartItem ? cartItem.quantity : 0);
+                const disabled = displayStock <= 0;
+                const stockColor = displayStock <= 10 ? 'rgb(220 38 38)' : '#FFFFFF'; 
+                
+                const imageSrc = p.imageId ? await getProductImage(p.imageId) : null;
+                const backgroundStyle = imageSrc 
+                    ? `background-image: url(${imageSrc});`
+                    : `background-color: ${getCategoryColor(p.category)};`;
+
+                html += `<div class="product-card-pos ${disabled ? 'disabled' : ''}" style="${backgroundStyle}" ${!disabled ? `onclick="app.addToCart('${p.id}')"` : ''}>
+                    <div class="info-overlay">
+                        <div class="product-name">${p.name}</div>
+                        ${p.brandName ? `<div class="product-brand">(${p.brandName})</div>` : ''}
+                        <div class="product-details mt-1">
+                            <span>${formatCurrency(p.sellingPrice)}</span>
+                            <span class="stock-text" style="color: ${stockColor};">Stock: ${displayStock}</span>
+                        </div>
+                    </div>
+                </div>`;
+            }
+            listEl.innerHTML = html || '<p class="col-span-full p-4">No products found.</p>';
+        }
+
+        function renderCategoryFilters() {
+            const container = document.getElementById('category-filters'); if (!container) return;
+            let buttonsHTML = `<button class="category-filter-btn ${state.activeCategory === 'All' ? 'active' : ''}" data-category="All" style="background-color: #4b5563;">All</button>`;
+            buttonsHTML += CATEGORIES.map(cat => `<button class="category-filter-btn ${state.activeCategory === cat.name ? 'active' : ''}" data-category="${cat.name}" style="background-color: ${getCategoryColor(cat.name)}; color: #000000;">${cat.name}</button>`).join('');
+            container.innerHTML = buttonsHTML;
+            container.querySelectorAll('.category-filter-btn').forEach(btn => btn.addEventListener('click', (e) => { state.activeCategory = e.target.dataset.category; renderCategoryFilters(); renderPosProducts(); }));
+        }
+
+        function renderGroupFilterDropdown() {
+            const dropdown = document.getElementById('group-filter-dropdown'); if (!dropdown) return;
+            dropdown.innerHTML = '<option value="All">All Groups</option>' + state.groups.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
+            dropdown.value = state.activeGroup;
+        }
+        
+        function renderBrandFilterDropdown() {
+            const dropdown = document.getElementById('brand-filter-dropdown'); if (!dropdown) return;
+            dropdown.innerHTML = '<option value="All">All Brands</option>' + state.brands.map(f => `<option value="${f.id}">${f.name}</option>`).join('');
+            dropdown.value = state.activeBrand;
+        }
+
+        function populateCategorySelects(prefix = '') {
+            const selects = document.querySelectorAll(`#${prefix}product-category`);
+            selects.forEach(sel => sel.innerHTML = CATEGORIES.map(c => `<option value="${c.name}">${c.name}</option>`).join(''));
+        }
+
+        function populateGroupSelects(prefix = '') {
+            const optionHTML = '<option value="">-- No Group --</option>' + state.groups.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
+            const selects = document.querySelectorAll(`#${prefix}product-group`);
+            selects.forEach(sel => sel.innerHTML = optionHTML);
+        }
+
+        function populateBrandSelects(prefix = '') {
+            const optionHTML = '<option value="">-- No Brand --</option>' + state.brands.map(f => `<option value="${f.id}">${f.name}</option>`).join('');
+            const selects = document.querySelectorAll(`#${prefix}product-brand`);
+            selects.forEach(sel => sel.innerHTML = optionHTML);
+        }
+        
+        const displayInvoice = (sale) => {
+            if (!sale) return;
+            invoiceActionTaken = false;
+            const modal = document.getElementById('invoice-modal');
+            modal.querySelector('#invoice-id').textContent = sale.id; modal.querySelector('#invoice-customer-name').textContent = sale.customerName;
+            modal.querySelector('#invoice-date').textContent = new Date(sale.date).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
+            modal.querySelector('#invoice-items').innerHTML = sale.items.map(item => {
+                const brandPart = item.brandName ? ` (${item.brandName})` : '';
+                return `<tr><td class="text-left py-1">${item.name}${brandPart}</td><td class="text-center">${item.quantity}</td><td class="text-right">${(item.sellingPrice || 0).toFixed(2)}</td><td class="text-right">${formatCurrency(item.sellingPrice * item.quantity)}</td></tr>`;
+            }).join('');
+            modal.querySelector('#invoice-subtotal').textContent = formatCurrency(sale.subtotal); modal.querySelector('#invoice-discount').textContent = formatCurrency(sale.discount); modal.querySelector('#invoice-total').textContent = formatCurrency(sale.total); modal.classList.add('visible');
+        };
+
+        window.app = {
+            addToCart: (id) => { const wasEmpty = state.cart.length === 0; const p = state.products.find(prod => prod.id === id); const existing = state.cart.find(i => i.id === id); const availableStock = p.stock - (existing ? existing.quantity : 0); if (availableStock <= 0) return; if (existing) { existing.quantity++; } else { state.cart.push({ ...p, quantity: 1 }); } renderCart(); if (wasEmpty && state.cart.length > 0) { openCartSidebar(); } },
+            removeFromCart: (id) => { state.cart = state.cart.filter(i => i.id !== id); renderCart(); if(state.cart.length === 0) { closeCartSidebar(); } },
+            updateCartQuantity: (id, change) => { const item = state.cart.find(i => i.id === id); if (!item) return; const p = state.products.find(prod => prod.id === id); if (change > 0 && p.stock <= item.quantity) return; item.quantity += change; if (item.quantity <= 0) app.removeFromCart(id); else renderCart(); },
+            deleteProduct: (productId) => { if (confirm('Are you sure?')) { remove(ref(database, `data/${currentUserUID}/products/${productId}`)); localStorage.removeItem(`product_image_${productId}`); } },
+            deleteGroup: (groupId) => { if (confirm('Are you sure you want to delete this group? Products in this group will not be deleted.')) { remove(ref(database, `data/${currentUserUID}/groups/${groupId}`)); } },
+            deleteBrand: (brandId) => { if (confirm('Are you sure you want to delete this brand? Products using this brand will not be deleted but unlinked.')) { remove(ref(database, `data/${currentUserUID}/brands/${brandId}`)); } },
+            showEditProductModal: (productId) => { const p = state.products.find(p => p.id === productId); if (!p) return; const modal = document.getElementById('edit-product-modal'); const form = modal.querySelector('form'); form.reset(); modal.querySelector('#edit-product-id').value = productId; form.querySelector('#edit-product-name').value = p.name; form.querySelector('#edit-product-brand').value = p.brandId || ''; form.querySelector('#edit-product-sku').value = p.sku || ''; form.querySelector('#edit-product-category').value = p.category || 'General'; form.querySelector('#edit-product-group').value = p.groupId || ''; form.querySelector('#edit-product-cost-price').value = p.costPrice || 0; form.querySelector('#edit-product-sell-price').value = p.sellingPrice || 0; form.querySelector('#edit-product-stock').value = p.stock || 0; form.querySelector('#edit-product-expiry').value = p.expiryDate || ''; document.getElementById('edit-product-modal').classList.add('visible'); },
+            showInvoice: (saleId) => { const sale = state.sales.find(s => s.id === saleId); displayInvoice(sale); },
+            showReturnModal: (saleId) => { const sale = state.sales.find(s => s.id === saleId); if (!sale) return; const modal = document.getElementById('return-sale-modal'); modal.querySelector('#return-invoice-id').textContent = sale.id; modal.querySelector('#return-items-list').innerHTML = sale.items.map(item => { const maxReturn = item.quantity - (item.returnedQty || 0); if (maxReturn <= 0) return ''; return `<div class="grid grid-cols-3 gap-4 items-center"><span class="col-span-1">${item.name} (Sold: ${item.quantity})</span><label class="text-sm">Qty to Return:</label><input type="number" data-item-id="${item.id}" data-item-cost="${item.costPrice || 0}" data-max-return="${maxReturn}" class="input-field" value="0" min="0" max="${maxReturn}"></div>`; }).join(''); document.getElementById('return-sale-form').dataset.saleId = saleId; modal.classList.add('visible'); },
+            showSettleCreditModal: (customerId) => { const customer = state.customers.find(c => c.id === customerId); if (!customer) return; const modal = document.getElementById('settle-credit-modal'); const creditSalesTotal = state.sales.filter(s => s.customerId === customer.id && s.status === 'Credit').reduce((sum, s) => sum + s.total, 0); const paymentsTotal = (customer.payments || []).reduce((sum, p) => sum + p.amount, 0); const balance = creditSalesTotal - paymentsTotal; modal.querySelector('#settle-customer-id').value = customerId; modal.querySelector('#settle-customer-name').textContent = customer.name; modal.querySelector('#settle-amount-due').textContent = formatCurrency(balance); const amountPaidInput = modal.querySelector('#settle-amount-paid'); amountPaidInput.value = ''; amountPaidInput.max = balance.toFixed(2); modal.querySelector('#settle-amount-remaining').textContent = formatCurrency(balance); modal.classList.add('visible'); },
+            deletePurchase: (purchaseId) => { if(confirm('Are you sure you want to delete this purchase record? This will NOT update the product stock.')) { remove(ref(database, `data/${currentUserUID}/purchases/${purchaseId}`)); } },
+            removePurchaseItemRow: (rowIndex) => { state.currentPurchaseItems.splice(rowIndex, 1); renderPurchaseItems(); },
+            updatePurchaseItem: (index, field, value) => { const item = state.currentPurchaseItems[index]; if (!item) return; if (field === 'name') { item.name = value; const selectedOption = document.querySelector(`#products-datalist option[value='${value.replace(/'/g, "\\'")}']`); if (selectedOption) { item.productId = selectedOption.dataset.id; item.costPrice = parseFloat(selectedOption.dataset.cost) || 0; renderPurchaseItems(); } } else if (field === 'quantity') { item.quantity = parseFloat(value) || 0; } else if (field === 'costPrice') { item.costPrice = parseFloat(value) || 0; } updatePurchaseTotals(); },
+            showPurchaseInvoiceById: (purchaseId) => { const purchase = state.purchases.find(p => p.id === purchaseId); if(purchase) displayPurchaseInvoice(purchase); },
+            showEditPurchaseModal: (purchaseId) => { const purchase = state.purchases.find(p => p.id === purchaseId); if (!purchase) return; const modal = document.getElementById('purchase-modal'); document.getElementById('purchase-modal-title').textContent = 'Edit Supplier Purchase'; document.getElementById('purchase-form').reset(); document.getElementById('editing-purchase-id').value = purchase.id; document.getElementById('purchase-supplier-name').value = purchase.supplierName; document.getElementById('purchase-supplier-contact').value = purchase.contact || ''; document.getElementById('purchase-date').value = purchase.date; document.getElementById('purchase-amount-paid').value = purchase.amountPaid; state.currentPurchaseItems = JSON.parse(JSON.stringify(purchase.items || [])); state.editingPurchaseOriginalItems = JSON.parse(JSON.stringify(purchase.items || [])); renderPurchaseItems(); modal.classList.add('visible');},
+            deleteHoldBill: (billId) => { if(confirm('Are you sure you want to delete this held bill?')) remove(ref(database, `data/${currentUserUID}/holdBills/${billId}`)); },
+            resumeHoldBill: (billId) => { const bill = state.holdBills.find(b => b.id === billId); if(!bill) return; state.cart = bill.cart; document.getElementById('pos-customer-input').value = bill.customerName || 'Walk-in Customer'; document.getElementById('cart-discount-value').value = bill.discountValue || 0; updateCartTotals(); remove(ref(database, `data/${currentUserUID}/holdBills/${billId}`)); showPage('pos'); openCartSidebar(); },
+            showCustomerLedger: (customerId) => {
+                const customer = state.customers.find(c => c.id === customerId); if(!customer) return;
+                const ledgerModal = document.getElementById('customer-ledger-modal');
+                ledgerModal.querySelector('#ledger-customer-name').textContent = customer.name;
+                const sales = state.sales.filter(s => s.customerId === customerId && s.status === 'Credit');
+                const payments = customer.payments || [];
+                const transactions = [...sales, ...payments].sort((a,b) => new Date(a.date) - new Date(b.date));
+                let balance = 0;
+                const tableBody = ledgerModal.querySelector('#customer-ledger-table-body');
+                tableBody.innerHTML = transactions.map(t => {
+                    let debit = 0, credit = 0;
+                    let description = '';
+                    if(t.items) { // It's a sale
+                        debit = t.total;
+                        balance += debit;
+                        description = `Sale (Invoice: ${t.id}) <ul class="text-xs list-disc pl-4">${t.items.map(i => `<li>${i.name} x ${i.quantity}</li>`).join('')}</ul>`;
+                    } else { // It's a payment
+                        credit = t.amount;
+                        balance -= credit;
+                        description = 'Payment Received';
+                    }
+                    return `<tr class="border-b" style="border-color: var(--border-color);"><td class="p-2 align-top">${new Date(t.date).toLocaleString()}</td><td class="p-2 align-top">${description}</td><td class="p-2 text-right align-top text-red-400">${formatCurrency(debit)}</td><td class="p-2 text-right align-top text-green-400">${formatCurrency(credit)}</td><td class="p-2 text-right align-top">${formatCurrency(balance)}</td></tr>`;
+                }).join('');
+                ledgerModal.classList.add('visible');
+            },
+            showBrandDetails: (brandId) => {
+                const brand = state.brands.find(f => f.id === brandId);
+                if(!brand) return;
+                const modal = document.getElementById('brand-details-modal');
+                modal.querySelector('#detail-brand-name').textContent = brand.name || 'N/A';
+                modal.querySelector('#detail-brand-details').textContent = brand.details || 'N/A';
+                modal.querySelector('#detail-brand-description').textContent = brand.description || 'No description provided.';
+                modal.querySelector('#detail-brand-notes').textContent = brand.notes || 'No notes provided.';
+                modal.classList.add('visible');
+            },
+            editBrand: (brandId) => {
+                const brand = state.brands.find(f => f.id === brandId);
+                if(!brand) return;
+                const form = document.getElementById('add-brand-form');
+                form.querySelector('#editing-brand-id').value = brand.id;
+                form.querySelector('#brand-name').value = brand.name;
+                form.querySelector('#brand-details').value = brand.details || '';
+                form.querySelector('#brand-description').value = brand.description || '';
+                form.querySelector('#brand-notes').value = brand.notes || '';
+                document.getElementById('cancel-edit-brand-btn').classList.remove('hidden');
+                form.scrollIntoView({ behavior: 'smooth' });
+            },
+            showEditStaffModal: (staffId) => {
+                const staff = state.staff.find(s => s.id === staffId); if(!staff) return;
+                const modal = document.getElementById('edit-staff-modal');
+                modal.querySelector('#edit-staff-id').value = staff.id;
+                modal.querySelector('#edit-staff-name').value = staff.name;
+                modal.querySelector('#edit-staff-phone').value = staff.phone || '';
+                modal.querySelector('#edit-staff-position').value = staff.position;
+                modal.querySelector('#edit-staff-salary').value = staff.salary;
+                modal.querySelector('#edit-staff-joining-date').value = staff.joiningDate;
+                modal.querySelector('#edit-staff-status').value = staff.status || 'Active';
+                modal.classList.add('visible');
+            },
+            deleteStaff: (staffId) => { if(confirm("Are you sure you want to delete this staff member?")) { remove(ref(database, `data/${currentUserUID}/staff/${staffId}`)); } },
+            showPaySalaryModal: (staffId) => {
+                const staff = state.staff.find(s => s.id === staffId); if(!staff) return;
+                const modal = document.getElementById('pay-salary-modal');
+                modal.querySelector('form').reset();
+                modal.querySelector('#pay-salary-staff-id').value = staff.id;
+                modal.querySelector('#pay-salary-staff-name').textContent = staff.name;
+                modal.querySelector('#pay-salary-staff-salary').textContent = formatCurrency(staff.salary);
+                modal.querySelector('#pay-salary-amount').value = staff.salary;
+                modal.querySelector('#pay-salary-date').value = new Date().toISOString().split('T')[0];
+                modal.classList.add('visible');
+            },
+            showEditExpenseModal: (expenseId) => {
+                const expense = state.expenses.find(e => e.id === expenseId); if(!expense) return;
+                const modal = document.getElementById('edit-expense-modal');
+                modal.querySelector('#edit-expense-id').value = expense.id;
+                modal.querySelector('#edit-expense-title').value = expense.title;
+                modal.querySelector('#edit-expense-category').value = expense.category;
+                modal.querySelector('#edit-expense-amount').value = expense.amount;
+                modal.querySelector('#edit-expense-date').value = expense.date;
+                modal.querySelector('#edit-expense-notes').value = expense.notes || '';
+                modal.classList.add('visible');
+            },
+            deleteExpense: (expenseId) => { if(confirm("Are you sure you want to delete this expense record?")) { remove(ref(database, `data/${currentUserUID}/expenses/${expenseId}`)); } },
+        };
+        
+        function renderGroupsPage() { const tableBody = document.getElementById('groups-table-body'); if (!tableBody) return; tableBody.innerHTML = state.groups.sort((a,b) => a.name.localeCompare(b.name)).map(g => `<tr class="border-b" style="border-color: var(--border-color);"><td class="p-3">${g.name}</td><td class="text-center p-2"><button class="btn btn-sm btn-danger" onclick="app.deleteGroup('${g.id}')"><i class="fas fa-trash"></i></button></td></tr>`).join('') || `<tr><td colspan="2" class="text-center p-4">No groups found. Add one to get started.</td></tr>`;}
+        function renderBrandsPage() { const tableBody = document.getElementById('brands-table-body'); if (!tableBody) return; tableBody.innerHTML = state.brands.sort((a,b) => a.name.localeCompare(b.name)).map(f => `<tr class="border-b" style="border-color: var(--border-color);"><td class="p-3">${f.name}</td><td>${f.details || ''}</td><td class="text-center p-2 space-x-2"><button class="btn btn-sm btn-info" onclick="app.showBrandDetails('${f.id}')"><i class="fas fa-eye"></i></button><button class="btn btn-sm btn-warning" onclick="app.editBrand('${f.id}')"><i class="fas fa-edit"></i></button><button class="btn btn-sm btn-danger" onclick="app.deleteBrand('${f.id}')"><i class="fas fa-trash"></i></button></td></tr>`).join('') || `<tr><td colspan="3" class="text-center p-4">No brands found. Add one to get started.</td></tr>`;}
+        
+        function renderCustomersPage() {
+            const tableBody = document.getElementById('customers-table-body'); if(!tableBody) return;
+            tableBody.innerHTML = state.customers.map(customer => {
+                const creditSalesTotal = state.sales.filter(s => s.customerId === customer.id && s.status === 'Credit').reduce((sum, s) => sum + s.total, 0);
+                const paymentsTotal = (customer.payments || []).reduce((sum, p) => sum + p.amount, 0);
+                const balance = creditSalesTotal - paymentsTotal;
+                return `<tr class="border-b" style="border-color: var(--border-color);"><td class="p-3">${customer.name}</td><td>${customer.phone || 'N/A'}</td><td class="font-bold text-red-400">${formatCurrency(balance)}</td><td class="text-center space-x-2"><button class="btn btn-sm btn-info" onclick="app.showCustomerLedger('${customer.id}')">View Ledger</button><button class="btn btn-sm btn-success" onclick="app.showSettleCreditModal('${customer.id}')" ${balance <= 0 ? 'disabled' : ''}>Settle</button></td></tr>`;
+            }).join('') || `<tr><td colspan="4" class="text-center p-4">No customers found.</td></tr>`;
+        }
+
+        function renderHoldBillsPage() {
+            const container = document.getElementById('hold-bills-list'); if(!container) return;
+            container.innerHTML = state.holdBills.map(bill => {
+                const total = bill.cart.reduce((sum, item) => sum + item.sellingPrice * item.quantity, 0);
+                const itemsList = bill.cart.map(item => `
+                    <div class="flex justify-between text-sm">
+                        <span>${item.name} x ${item.quantity}</span>
+                        <span>${formatCurrency(item.sellingPrice * item.quantity)}</span>
+                    </div>`).join('');
+                return `<div class="card p-4 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-baseline">
+                           <p class="font-bold text-lg">${bill.customerName || 'Walk-in Customer'}</p>
+                           <p class="text-2xl font-bold">${formatCurrency(total)}</p>
+                        </div>
+                        <hr class="my-2" style="border-color: var(--border-color);">
+                        <div class="space-y-1 max-h-32 overflow-y-auto pr-2">${itemsList}</div>
+                    </div>
+                    <div class="flex gap-2 mt-4 pt-2 border-t" style="border-color: var(--border-color);">
+                        <button class="btn btn-sm btn-success flex-grow" onclick="app.resumeHoldBill('${bill.id}')"><i class="fas fa-play mr-2"></i>Resume</button>
+                        <button class="btn btn-sm btn-danger flex-grow" onclick="app.deleteHoldBill('${bill.id}')"><i class="fas fa-trash mr-2"></i>Delete</button>
+                    </div>
+                </div>`;
+            }).join('') || `<div class="col-span-full text-center p-10" style="color: var(--text-secondary);">No bills are currently on hold.</div>`;
+        }
+        
+        function renderReturnedBillsPage() {
+            const tableBody = document.getElementById('returned-bills-table-body'); if(!tableBody) return;
+            const searchTerm = document.getElementById('returned-bills-search').value.toLowerCase();
+            const returnedSales = state.sales.filter(s => (s.status === 'Returned' || s.status === 'Partially Returned') && s.id.toLowerCase().includes(searchTerm)).sort((a, b) => new Date(b.date) - new Date(a.date));
+            tableBody.innerHTML = returnedSales.map(sale => {
+                const returnedValue = sale.items.reduce((sum, item) => sum + (item.returnedQty || 0) * item.sellingPrice, 0);
+                return `<tr class="border-b" style="border-color: var(--border-color);"><td class="p-3">${sale.id}</td><td>${new Date(sale.date).toLocaleString()}</td><td>${sale.customerName}</td><td class="font-semibold text-orange-400">${sale.status}</td><td>${formatCurrency(returnedValue)}</td><td class="text-center"><button class="btn btn-sm btn-info" onclick="app.showInvoice('${sale.id}')"><i class="fas fa-eye"></i></button></td></tr>`;
+            }).join('') || `<tr><td colspan="6" class="text-center p-4">No returned bills found.</td></tr>`;
+        }
+
+        async function renderProductsTable() { 
+            const tableBody = document.getElementById('products-table-body'); 
+            if (!tableBody) return;
+            
+            let rowsHtml = '';
+            for (const p of state.products.sort((a,b) => a.name.localeCompare(b.name))) {
+                const imageSrc = p.imageId ? await getProductImage(p.imageId) : 'icons/placeholder.png';
+                rowsHtml += `<tr class="border-b" style="border-color: var(--border-color);">
+                    <td class="p-1"><img src="${imageSrc}" class="h-12 w-12 object-cover rounded-md mx-auto"></td>
+                    <td class="p-3">${p.name}</td>
+                    <td>${p.brandName || '-'}</td>
+                    <td>${p.sku || '-'}</td>
+                    <td>${p.category || 'N/A'}</td>
+                    <td>${formatCurrency(p.costPrice)}</td>
+                    <td>${formatCurrency(p.sellingPrice)}</td>
+                    <td>${p.stock || 0}</td>
+                    <td>${p.expiryDate || 'N/A'}</td>
+                    <td class="p-2 whitespace-nowrap"><button class="btn btn-sm btn-info" onclick="app.showEditProductModal('${p.id}')"><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-danger ml-1" onclick="app.deleteProduct('${p.id}')"><i class="fas fa-trash"></i></button></td>
+                </tr>`;
+            }
+            tableBody.innerHTML = rowsHtml || `<tr><td colspan="10" class="text-center p-4">No products found. Add one to get started.</td></tr>`; 
+        };
+        function renderPurchasesPage() { const tableBody = document.getElementById('purchases-table-body'); if (!tableBody) return; tableBody.innerHTML = state.purchases.sort((a,b) => new Date(b.date) - new Date(a.date)).map(p => { const remaining = (p.totalAmount || 0) - (p.amountPaid || 0); return `<tr class="border-b" style="border-color: var(--border-color);"><td class="p-3">${p.supplierName}</td><td>${new Date(p.date).toLocaleDateString()}</td><td>${p.id}</td><td>${formatCurrency(p.totalAmount)}</td><td>${formatCurrency(p.amountPaid)}</td><td class="font-bold ${remaining > 0 ? 'text-red-400' : 'text-green-400'}">${formatCurrency(remaining)}</td><td class="text-center space-x-2"><button class="btn btn-sm btn-info" onclick="app.showPurchaseInvoiceById('${p.id}')"><i class="fas fa-eye"></i></button><button class="btn btn-sm btn-warning" onclick="app.showEditPurchaseModal('${p.id}')"><i class="fas fa-edit"></i></button><button class="btn btn-sm btn-danger" onclick="app.deletePurchase('${p.id}')"><i class="fas fa-trash"></i></button></td></tr>`; }).join('') || `<tr><td colspan="7" class="text-center p-4">No purchase history found.</td></tr>`; };
+        
+        function renderStaffPage() {
+            const tableBody = document.getElementById('staff-table-body'); if(!tableBody) return;
+            tableBody.innerHTML = state.staff.map(s => {
+                const statusClass = s.status === 'Active' ? 'text-green-400' : 'text-red-400';
+                return `<tr class="border-b" style="border-color: var(--border-color);"><td class="p-3">${s.name}</td><td>${s.phone || 'N/A'}</td><td>${s.position}</td><td>${formatCurrency(s.salary)}</td><td class="${statusClass}">${s.status}</td><td class="p-2 whitespace-nowrap space-x-1"><button class="btn btn-sm btn-success" onclick="app.showPaySalaryModal('${s.id}')" title="Pay Salary"><i class="fas fa-hand-holding-usd"></i></button><button class="btn btn-sm btn-info" onclick="app.showEditStaffModal('${s.id}')" title="Edit"><i class="fas fa-edit"></i></button><button class="btn btn-sm btn-danger" onclick="app.deleteStaff('${s.id}')" title="Delete"><i class="fas fa-trash"></i></button></td></tr>`;
+            }).join('') || `<tr><td colspan="6" class="text-center p-4">No staff members found.</td></tr>`;
+        }
+
+        function renderExpensesPage() {
+            const tableBody = document.getElementById('expenses-table-body'); if(!tableBody) return;
+            const expenses = state.expenses.filter(e => e.category !== "Return Loss" && e.category !== "Salary");
+            tableBody.innerHTML = expenses.sort((a,b) => new Date(b.date) - new Date(a.date)).map(e => `
+                <tr class="border-b" style="border-color: var(--border-color);"><td class="p-3">${e.date}</td><td>${e.title}</td><td>${e.category}</td><td class="text-right">${formatCurrency(e.amount)}</td><td class="p-2 whitespace-nowrap space-x-1"><button class="btn btn-sm btn-info" onclick="app.showEditExpenseModal('${e.id}')"><i class="fas fa-edit"></i></button><button class="btn btn-sm btn-danger" onclick="app.deleteExpense('${e.id}')"><i class="fas fa-trash"></i></button></td></tr>
+            `).join('') || `<tr><td colspan="5" class="text-center p-4">No manual expenses recorded.</td></tr>`;
+        }
+
+        function renderFinancialLedgerPage() {
+            const tableBody = document.getElementById('financial-ledger-table-body');
+            if (!tableBody) return;
+
+            const startDateStr = document.getElementById('ledger-start-date').value;
+            const endDateStr = document.getElementById('ledger-end-date').value;
+            
+            let ledgerEntries = [];
+
+            state.sales.forEach(s => ledgerEntries.push({
+                date: new Date(s.date), description: `Sale - Invoice ${s.id}`, type: 'Sale',
+                debit: 0, credit: s.total, cost: s.items.reduce((sum, i) => sum + (i.costPrice || 0) * i.quantity, 0)
+            }));
+            state.purchases.forEach(p => ledgerEntries.push({
+                date: new Date(p.date), description: `Purchase from ${p.supplierName}`, type: 'Purchase',
+                debit: p.amountPaid, credit: 0, cost: 0
+            }));
+            state.expenses.forEach(e => ledgerEntries.push({
+                date: new Date(e.date), description: e.title, type: e.category,
+                debit: e.amount, credit: 0, cost: e.category === 'Return Loss' ? e.amount : 0
+            }));
+            state.customers.forEach(c => {
+                (c.payments || []).forEach(p => ledgerEntries.push({
+                    date: new Date(p.date), description: `Credit Received from ${c.name}`, type: 'Credit Payment',
+                    debit: 0, credit: p.amount, cost: 0
+                }));
+            });
+
+            const filteredEntries = ledgerEntries.filter(entry => {
+                if (!startDateStr || !endDateStr) return true;
+                const entryDate = entry.date;
+                const startDate = new Date(startDateStr); startDate.setHours(0,0,0,0);
+                const endDate = new Date(endDateStr); endDate.setHours(23,59,59,999);
+                return entryDate >= startDate && entryDate <= endDate;
+            });
+
+            filteredEntries.sort((a, b) => a.date - b.date);
+
+            let runningBalance = 0;
+            tableBody.innerHTML = filteredEntries.map(entry => {
+                runningBalance += entry.credit - entry.debit;
+                return `<tr class="border-b" style="border-color: var(--border-color);">
+                    <td class="p-3">${entry.date.toLocaleString()}</td>
+                    <td>${entry.description}</td>
+                    <td>${entry.type}</td>
+                    <td class="text-right text-red-400">${entry.debit > 0 ? formatCurrency(entry.debit) : '-'}</td>
+                    <td class="text-right text-green-400">${entry.credit > 0 ? formatCurrency(entry.credit) : '-'}</td>
+                    <td class="text-right font-semibold">${formatCurrency(runningBalance)}</td>
+                </tr>`;
+            }).join('') || `<tr><td colspan="6" class="p-4 text-center">No transactions for this period.</td></tr>`;
+            
+            const totalSales = filteredEntries.filter(e => e.type === 'Sale').reduce((sum, e) => sum + e.credit, 0);
+            const totalPurchasesPaid = filteredEntries.filter(e => e.type === 'Purchase').reduce((sum, e) => sum + e.debit, 0);
+            const totalOtherExpenses = filteredEntries.filter(e => e.type !== 'Sale' && e.type !== 'Purchase' && e.type !== 'Credit Payment').reduce((sum, e) => sum + e.debit, 0);
+            const costOfGoodsSold = filteredEntries.filter(e => e.type === 'Sale').reduce((sum, e) => sum + (e.cost || 0), 0);
+            const totalCreditReceived = filteredEntries.filter(e => e.type === 'Credit Payment').reduce((sum, e) => sum + e.credit, 0);
+            const netProfit = (totalSales + totalCreditReceived) - costOfGoodsSold - totalPurchasesPaid - totalOtherExpenses;
+
+            document.getElementById('ledger-summary-sales').textContent = formatCurrency(totalSales + totalCreditReceived);
+            document.getElementById('ledger-summary-purchases').textContent = formatCurrency(totalPurchasesPaid);
+            document.getElementById('ledger-summary-expenses').textContent = formatCurrency(totalOtherExpenses);
+            
+            const netEl = document.getElementById('ledger-summary-net');
+            netEl.textContent = formatCurrency(netProfit);
+            netEl.className = `text-right p-4 ${netProfit >= 0 ? 'text-green-500' : 'text-red-500'}`;
+        }
+        
+        function renderSalesReport(startDate, endDate, title) {
+            if (!document.getElementById('report-total-sales')) return;
+            startDate.setHours(0, 0, 0, 0);
+            endDate.setHours(23, 59, 59, 999);
+            const reportType = document.getElementById('report-type-select').value;
+            const filteredSales = state.sales.filter(s => {
+                const saleDate = new Date(s.date);
+                return saleDate >= startDate && saleDate <= endDate;
+            });
+            
+            const netSales = filteredSales.reduce((s, c) => s + (c.total || 0), 0);
+            const netProfit = filteredSales.reduce((s, c) => s + (c.profit || 0), 0);
+            document.getElementById('report-title').textContent = title;
+            document.getElementById('report-total-sales').textContent = formatCurrency(netSales);
+            document.getElementById('report-total-profit').textContent = formatCurrency(netProfit);
+            
+            const tableHead = document.getElementById('report-table-head');
+            const tableBody = document.getElementById('report-transactions-table');
+
+            if (reportType === 'invoice') {
+                tableHead.innerHTML = `<tr><th class="p-2">Invoice ID</th><th>Time</th><th>Customer</th><th class="text-right">Total</th><th class="text-right">Profit</th></tr>`;
+                document.getElementById('report-total-bills').textContent = filteredSales.length;
+                tableBody.innerHTML = filteredSales.sort((a,b) => new Date(b.date) - new Date(a.date)).map(s => `<tr class="border-b" style="border-color: var(--border-color);"><td class="p-2">${s.id}</td><td>${new Date(s.date).toLocaleString()}</td><td>${s.customerName}</td><td class="text-right">${formatCurrency(s.total)}</td><td class="text-right text-green-400">${formatCurrency(s.profit)}</td></tr>`).join('') || `<tr><td colspan="5" class="text-center p-4">No sales in this period.</td></tr>`;
+            } else if (reportType === 'brand') {
+                tableHead.innerHTML = `<tr><th class="p-2">Brand Name</th><th class="text-right">Quantity Sold</th><th class="text-right">Total Sales</th><th class="text-right">Total Profit</th></tr>`;
+                const brandSales = {};
+                filteredSales.flatMap(s => s.items).forEach(item => {
+                    const brandIdentifier = item.brandName || "Uncategorized";
+                    if (!brandSales[brandIdentifier]) {
+                        brandSales[brandIdentifier] = { name: brandIdentifier, qty: 0, total: 0, profit: 0 };
+                    }
+                    brandSales[brandIdentifier].qty += item.quantity;
+                    brandSales[brandIdentifier].total += item.quantity * item.sellingPrice;
+                    brandSales[brandIdentifier].profit += item.quantity * (item.sellingPrice - (item.costPrice || 0));
+                });
+                const brandArray = Object.values(brandSales).sort((a, b) => b.total - a.total);
+                document.getElementById('report-total-bills').textContent = brandArray.length;
+                tableBody.innerHTML = brandArray.map(f => `<tr class="border-b" style="border-color: var(--border-color);"><td class="p-2">${f.name}</td><td class="text-right">${f.qty}</td><td class="text-right">${formatCurrency(f.total)}</td><td class="text-right text-green-400">${formatCurrency(f.profit)}</td></tr>`).join('') || `<tr><td colspan="4" class="text-center p-4">No brand-based sales in this period.</td></tr>`;
+            }
+        };
+
+        function renderDayEndReport() {
+            const dateStr = document.getElementById('dayend-date').value;
+            if (!dateStr) return;
+            document.getElementById('dayend-report-title').textContent = `Daily Report for ${dateStr}`;
+            
+            const startDate = new Date(dateStr); startDate.setHours(0, 0, 0, 0);
+            const endDate = new Date(dateStr); endDate.setHours(23, 59, 59, 999);
+
+            const filteredSales = state.sales.filter(s => { const d = new Date(s.date); return d >= startDate && d <= endDate; });
+            const filteredPurchases = state.purchases.filter(p => { const d = new Date(p.date); return d >= startDate && d <= endDate; });
+            const filteredExpenses = state.expenses.filter(e => { const d = new Date(e.date); return d >= startDate && d <= endDate; });
+            const filteredCreditReceived = state.customers.flatMap(c => (c.payments || []).map(p => ({...p, customerName: c.name}))).filter(p => { const d = new Date(p.date); return d >= startDate && d <= endDate; });
+            const expiredInPeriod = state.products.filter(p => p.expiryDate === dateStr);
+
+            // Summary Calculations
+            const totalSales = filteredSales.reduce((sum, s) => sum + s.total, 0);
+            const totalPurchasesPaid = filteredPurchases.reduce((sum, p) => sum + p.amountPaid, 0);
+            const totalManualExpenses = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
+            const creditGiven = filteredSales.filter(s => s.status === 'Credit').reduce((sum, s) => sum + s.total, 0);
+            const creditTaken = filteredPurchases.reduce((sum, p) => sum + (p.totalAmount - p.amountPaid), 0);
+            const returnedValue = filteredSales.reduce((sum, s) => sum + s.items.reduce((itemSum, item) => itemSum + (item.returnedQty || 0) * item.sellingPrice, 0), 0);
+            const expiredLoss = expiredInPeriod.reduce((sum, p) => sum + (p.costPrice * p.stock), 0);
+            const totalCreditReceived = filteredCreditReceived.reduce((sum, p) => sum + p.amount, 0);
+            const cashSales = totalSales - creditGiven;
+            const closingCash = (0) + cashSales + totalCreditReceived - totalPurchasesPaid - totalManualExpenses;
+
+            // Update Summary Table
+            document.getElementById('dr-total-sales').textContent = formatCurrency(totalSales);
+            document.getElementById('dr-total-purchases').textContent = formatCurrency(totalPurchasesPaid);
+            document.getElementById('dr-total-expenses').textContent = formatCurrency(totalManualExpenses);
+            document.getElementById('dr-credit-given').textContent = formatCurrency(creditGiven);
+            document.getElementById('dr-credit-taken').textContent = formatCurrency(creditTaken);
+            document.getElementById('dr-returned-value').textContent = formatCurrency(returnedValue);
+            document.getElementById('dr-expired-loss').textContent = formatCurrency(expiredLoss);
+            document.getElementById('dr-closing-cash').textContent = formatCurrency(closingCash);
+
+            // Sales Breakdown
+            const salesByCategory = {};
+            filteredSales.flatMap(s => s.items).forEach(item => {
+                const cat = item.category || 'Uncategorized';
+                if (!salesByCategory[cat]) salesByCategory[cat] = { qty: 0, amount: 0 };
+                salesByCategory[cat].qty += item.quantity - (item.returnedQty || 0);
+                salesByCategory[cat].amount += (item.quantity - (item.returnedQty || 0)) * item.sellingPrice;
+            });
+            document.getElementById('dr-sales-breakdown').innerHTML = Object.entries(salesByCategory).map(([cat, data]) => `<tr><td>${cat}</td><td class="text-center">${data.qty}</td><td class="text-right">${formatCurrency(data.amount)}</td></tr>`).join('') || `<tr><td colspan="3" class="text-center">No sales recorded.</td></tr>`;
+
+            // Purchases Breakdown
+            document.getElementById('dr-purchases-breakdown').innerHTML = filteredPurchases.map(p => `<tr><td>${p.supplierName}</td><td>${p.items.length} items</td><td class="text-right">${formatCurrency(p.totalAmount)}</td><td>N/A</td></tr>`).join('') || `<tr><td colspan="4" class="text-center">No purchases recorded.</td></tr>`;
+
+            // Expense Details
+            document.getElementById('dr-expense-details').innerHTML = filteredExpenses.map(e => `<tr><td>${e.category}</td><td class="text-right">${formatCurrency(e.amount)}</td><td>${e.title}</td></tr>`).join('') || `<tr><td colspan="3" class="text-center">No expenses recorded.</td></tr>`;
+
+            // Credit Transactions
+            document.getElementById('dr-credit-given-details').innerHTML = filteredSales.filter(s => s.status === 'Credit').map(s => `<tr><td>${s.customerName}</td><td class="text-right">${formatCurrency(s.total)}</td></tr>`).join('') || `<tr><td colspan="2" class="text-center">No credit given.</td></tr>`;
+            document.getElementById('dr-credit-taken-details').innerHTML = filteredPurchases.filter(p => (p.totalAmount - p.amountPaid) > 0).map(p => `<tr><td>${p.supplierName}</td><td class="text-right">${formatCurrency(p.totalAmount - p.amountPaid)}</td></tr>`).join('') || `<tr><td colspan="2" class="text-center">No credit taken.</td></tr>`;
+
+            // Losses & Returns
+            let lossesHtml = '';
+            if (expiredLoss > 0) {
+                expiredInPeriod.forEach(p => {
+                    lossesHtml += `<tr><td>Expired Stock</td><td>${p.name}</td><td class="text-center">${p.stock}</td><td class="text-right">${formatCurrency(p.costPrice * p.stock)}</td></tr>`;
+                });
+            }
+            const returnLoss = filteredExpenses.filter(e => e.category === 'Return Loss').reduce((sum, e) => sum + e.amount, 0);
+            if (returnLoss > 0) lossesHtml += `<tr><td>Return Loss</td><td>From various invoices</td><td class="text-center">-</td><td class="text-right">${formatCurrency(returnLoss)}</td></tr>`;
+            document.getElementById('dr-losses-returns').innerHTML = lossesHtml || `<tr><td colspan="4" class="text-center">No losses or returns.</td></tr>`;
+        }
+        document.getElementById('dayend-filter-btn').addEventListener('click', renderDayEndReport);
+
+        const renderCart = () => { document.getElementById('cart-items').innerHTML = state.cart.map(item => `<div class="flex justify-between items-center p-2 rounded-md" style="background-color: #334155;"><div style="color: #e2e8f0;"><p class="font-medium text-amber-400">${item.name}</p><p class="text-sm text-gray-400">${formatCurrency(item.sellingPrice)} x ${item.quantity}</p></div><div class="flex items-center gap-3"><button class="w-6 h-6 bg-slate-600 rounded" onclick="app.updateCartQuantity('${item.id}', -1)">-</button><span>${item.quantity}</span><button class="w-6 h-6 bg-slate-600 rounded" onclick="app.updateCartQuantity('${item.id}', 1)">+</button><button class="text-red-500 ml-2" onclick="app.removeFromCart('${item.id}')"><i class="fas fa-times-circle"></i></button></div></div>`).join('') || '<p class="text-center mt-16 text-gray-400">Cart is empty.</p>'; updateCartTotals(); renderPosProducts(); };
+        const updateCartTotals = () => {
+            const subtotal = state.cart.reduce((sum, item) => sum + item.sellingPrice * item.quantity, 0);
+            const discountValue = parseFloat(document.getElementById('cart-discount-value').value) || 0;
+            let calculatedDiscount = 0;
+            if (state.settings.discountType === 'percent') {
+                calculatedDiscount = (subtotal * discountValue) / 100;
+            } else {
+                calculatedDiscount = discountValue;
+            }
+            document.getElementById('cart-subtotal').textContent = formatCurrency(subtotal);
+            document.getElementById('cart-total').textContent = formatCurrency(Math.max(0, subtotal - calculatedDiscount));
+            const discountLabel = document.getElementById('cart-discount-label');
+            if (discountLabel) {
+                 discountLabel.textContent = `Discount (${state.settings.discountType === 'percent' ? '%' : '₨'})`;
+            }
+        };
+        const resetPOS = () => { state.cart = []; document.getElementById('pos-customer-input').value = ''; document.getElementById('cart-discount-value').value = 0; renderCart(); closeCartSidebar(); };
+        
+        document.getElementById('cart-close-btn').addEventListener('click', closeCartSidebar);
+        document.getElementById('product-search').addEventListener('input', renderPosProducts);
+        document.getElementById('returned-bills-search').addEventListener('input', renderReturnedBillsPage);
+        document.getElementById('group-filter-dropdown').addEventListener('change', (e) => { state.activeGroup = e.target.value; renderPosProducts(); });
+        document.getElementById('brand-filter-dropdown').addEventListener('change', (e) => { state.activeBrand = e.target.value; renderPosProducts(); });
+        document.getElementById('cart-discount-value').addEventListener('input', updateCartTotals);
+        document.getElementById('close-invoice-btn').addEventListener('click', () => { document.getElementById('invoice-modal').classList.remove('visible'); resetPOS(); });
+        document.getElementById('print-invoice-btn').addEventListener('click', (e) => { if (invoiceActionTaken && !confirm("Are you sure you want to print this invoice again?")) return; const btn = e.currentTarget; btn.disabled = true; btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Printing...`; document.body.classList.add('printing'); setTimeout(() => { try { window.print(); } finally { document.body.classList.remove('printing'); btn.disabled = false; btn.innerHTML = `<i class="fas fa-print mr-2"></i>Print`; invoiceActionTaken = true; } }, 300); });
+        document.getElementById('download-invoice-pdf-btn').addEventListener('click', async (e) => { if (invoiceActionTaken && !confirm("Are you sure you want to download this PDF again?")) return; const btn = e.currentTarget; btn.disabled = true; btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Downloading...`; const el = document.getElementById('invoice-print-area-wrapper'); el.classList.add('force-black-text'); try { const { jsPDF } = window.jspdf; const canvas = await html2canvas(el, { scale: 3, useCORS: true, backgroundColor: '#ffffff'}); const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: [80, 200] }); const pdfWidth = pdf.internal.pageSize.getWidth(); const pdfHeight = (canvas.height * pdfWidth) / canvas.width; pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST'); pdf.save(`invoice-${document.getElementById('invoice-id').textContent}.pdf`); invoiceActionTaken = true; } catch(err) { console.error("PDF download failed:", err); alert("Could not download PDF."); } finally { el.classList.remove('force-black-text'); btn.disabled = false; btn.innerHTML = `<i class="fas fa-file-pdf mr-2"></i>Download PDF`; }});
+        
+        // Dashboard Date Filters
+        document.getElementById('db-daily-btn').addEventListener('click', () => { const today = new Date(); document.getElementById('db-start-date').value = ''; document.getElementById('db-end-date').value = ''; updateDashboard(today, today); });
+        document.getElementById('db-weekly-btn').addEventListener('click', () => { const today = new Date(); const dayOfWeek = today.getDay(); const startDate = new Date(today); startDate.setDate(today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1)); document.getElementById('db-start-date').value = ''; document.getElementById('db-end-date').value = ''; updateDashboard(startDate, today); });
+        document.getElementById('db-monthly-btn').addEventListener('click', () => { const today = new Date(); const startDate = new Date(today.getFullYear(), today.getMonth(), 1); document.getElementById('db-start-date').value = ''; document.getElementById('db-end-date').value = ''; updateDashboard(startDate, today); });
+        document.getElementById('db-filter-btn').addEventListener('click', () => { const start = document.getElementById('db-start-date').value; const end = document.getElementById('db-end-date').value; if(start && end) { updateDashboard(new Date(start), new Date(end)); } else { alert('Please select both start and end dates.'); }});
+
+        // Ledger Date Filters
+        const ledgerFilterHandler = () => { renderFinancialLedgerPage(); };
+        document.getElementById('ledger-daily-btn').addEventListener('click', () => { const today = new Date().toISOString().split('T')[0]; document.getElementById('ledger-start-date').value = today; document.getElementById('ledger-end-date').value = today; ledgerFilterHandler(); });
+        document.getElementById('ledger-weekly-btn').addEventListener('click', () => { const today = new Date(); const dayOfWeek = today.getDay(); const startDate = new Date(today); startDate.setDate(today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1)); document.getElementById('ledger-start-date').value = startDate.toISOString().split('T')[0]; document.getElementById('ledger-end-date').value = today.toISOString().split('T')[0]; ledgerFilterHandler(); });
+        document.getElementById('ledger-monthly-btn').addEventListener('click', () => { const today = new Date(); const startDate = new Date(today.getFullYear(), today.getMonth(), 1); document.getElementById('ledger-start-date').value = startDate.toISOString().split('T')[0]; document.getElementById('ledger-end-date').value = today.toISOString().split('T')[0]; ledgerFilterHandler(); });
+        document.getElementById('ledger-filter-btn').addEventListener('click', ledgerFilterHandler);
+
+
+        // Report Date & Type Filters
+        const reportFilterHandler = () => { const start = document.getElementById('report-start-date').value || new Date().toISOString().split('T')[0]; const end = document.getElementById('report-end-date').value || new Date().toISOString().split('T')[0]; renderSalesReport(new Date(start), new Date(end), `Report from ${start} to ${end}`); };
+        document.getElementById('report-daily-btn').addEventListener('click', () => { const today = new Date(); document.getElementById('report-start-date').value = today.toISOString().split('T')[0]; document.getElementById('report-end-date').value = today.toISOString().split('T')[0]; reportFilterHandler(); });
+        document.getElementById('report-weekly-btn').addEventListener('click', () => { const today = new Date(); const dayOfWeek = today.getDay(); const startDate = new Date(today); startDate.setDate(today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1)); document.getElementById('report-start-date').value = startDate.toISOString().split('T')[0]; document.getElementById('report-end-date').value = today.toISOString().split('T')[0]; reportFilterHandler(); });
+        document.getElementById('report-monthly-btn').addEventListener('click', () => { const today = new Date(); const startDate = new Date(today.getFullYear(), today.getMonth(), 1); document.getElementById('report-start-date').value = startDate.toISOString().split('T')[0]; document.getElementById('report-end-date').value = today.toISOString().split('T')[0]; reportFilterHandler(); });
+        document.getElementById('report-filter-btn').addEventListener('click', reportFilterHandler);
+        document.getElementById('report-type-select').addEventListener('change', reportFilterHandler);
+        document.getElementById('print-report-btn').addEventListener('click', (e) => { const btn = e.currentTarget; btn.disabled = true; btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Printing...`; document.body.classList.add('printing'); setTimeout(() => { try { window.print(); } finally { document.body.classList.remove('printing'); btn.disabled = false; btn.innerHTML = `<i class="fas fa-print mr-2"></i>Print`; } }, 300); });
+        document.getElementById('download-report-pdf-btn').addEventListener('click', async (e) => { const btn = e.currentTarget; btn.disabled = true; btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Downloading...`; try { const { jsPDF } = window.jspdf; const el = document.getElementById('report-print-area'); const canvas = await html2canvas(el, { scale: 2, useCORS: true }); const pdf = new jsPDF('p', 'mm', 'a4'); const imgWidth = 210; const pageHeight = 295; const imgHeight = canvas.height * imgWidth / canvas.width; let heightLeft = imgHeight; let position = 0; pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight); heightLeft -= pageHeight; while (heightLeft >= 0) { position = heightLeft - imgHeight; pdf.addPage(); pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight); heightLeft -= pageHeight; } pdf.save(`sales-report-${new Date().toISOString().split('T')[0]}.pdf`); } catch(err) { console.error("Report PDF download failed:", err); alert("Could not download report PDF."); } finally { btn.disabled = false; btn.innerHTML = `<i class="fas fa-file-pdf mr-2"></i>Download`; }});
+        document.getElementById('print-dayend-report-btn').addEventListener('click', (e) => { document.body.classList.add('printing'); setTimeout(() => { window.print(); document.body.classList.remove('printing'); }, 300); });
+        document.getElementById('download-dayend-report-pdf-btn').addEventListener('click', async (e) => { const btn = e.currentTarget; btn.disabled = true; btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Downloading...`; try { const { jsPDF } = window.jspdf; const el = document.getElementById('dayend-report-print-area'); const canvas = await html2canvas(el, { scale: 2, useCORS: true }); const pdf = new jsPDF('p', 'mm', 'a4'); const imgWidth = 210; const pageHeight = 295; const imgHeight = canvas.height * imgWidth / canvas.width; let heightLeft = imgHeight; let position = 0; pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight); heightLeft -= pageHeight; while (heightLeft >= 0) { position = heightLeft - imgHeight; pdf.addPage(); pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight); heightLeft -= pageHeight; } pdf.save(`daily-report-${document.getElementById('dayend-date').value}.pdf`); } catch(err) { console.error("Day-end PDF download failed:", err); alert("Could not download day-end PDF."); } finally { btn.disabled = false; btn.innerHTML = `<i class="fas fa-file-pdf mr-2"></i>Download`; }});
+        
+        // Modal cancel buttons
+        document.getElementById('cancel-return-btn').onclick = () => document.getElementById('return-sale-modal').classList.remove('visible');
+        document.getElementById('cancel-edit-product-btn').onclick = () => document.getElementById('edit-product-modal').classList.remove('visible');
+        document.getElementById('cancel-customer-btn').onclick = () => document.getElementById('customer-modal').classList.remove('visible');
+        document.getElementById('cancel-purchase-btn').onclick = () => document.getElementById('purchase-modal').classList.remove('visible');
+        document.getElementById('cancel-settle-credit-btn').onclick = () => document.getElementById('settle-credit-modal').classList.remove('visible');
+        document.getElementById('cancel-sub-product-btn').onclick = () => document.getElementById('new-product-submodal').classList.remove('visible');
+        document.getElementById('cancel-credit-select-btn').onclick = () => document.getElementById('credit-customer-select-modal').classList.remove('visible');
+        document.getElementById('cancel-ledger-btn').onclick = () => document.getElementById('customer-ledger-modal').classList.remove('visible');
+        document.getElementById('close-brand-products-btn').onclick = () => document.getElementById('brand-products-modal').classList.remove('visible');
+        document.getElementById('close-brand-details-btn').onclick = () => document.getElementById('brand-details-modal').classList.remove('visible');
+        document.getElementById('cancel-edit-staff-btn').onclick = () => document.getElementById('edit-staff-modal').classList.remove('visible');
+        document.getElementById('cancel-pay-salary-btn').onclick = () => document.getElementById('pay-salary-modal').classList.remove('visible');
+        document.getElementById('cancel-edit-expense-btn').onclick = () => document.getElementById('edit-expense-modal').classList.remove('visible');
+        
+        document.getElementById('settings-form').addEventListener('submit', (e) => { e.preventDefault(); const newSettings = { storeName: document.getElementById('setting-store-name').value, contact: document.getElementById('setting-contact-number').value, email: document.getElementById('setting-email').value, discountType: document.getElementById('setting-discount-type').value }; set(dbRefs.settings, newSettings).then(() => alert('Settings saved!')).catch(e => alert(e.message)); });
+        
+        // --- Purchase Modal Logic ---
+        function updatePurchaseTotals() { let total = 0; state.currentPurchaseItems.forEach(item => { total += (item.costPrice || 0) * (item.quantity || 0); }); document.getElementById('purchase-total-amount').textContent = formatCurrency(total); const paid = parseFloat(document.getElementById('purchase-amount-paid').value) || 0; const remaining = total - paid; document.getElementById('purchase-amount-remaining').textContent = formatCurrency(remaining); }
+        function renderPurchaseItems() {
+            const container = document.getElementById('purchase-items-container'); const datalist = document.getElementById('products-datalist');
+            datalist.innerHTML = state.products.map(p => `<option value="${p.name}" data-id="${p.id}" data-cost="${p.costPrice || 0}"></option>`).join('');
+            container.innerHTML = state.currentPurchaseItems.map((item, index) => `<div class="grid grid-cols-12 gap-2 items-center p-1 rounded"> <div class="col-span-5"><input type="text" list="products-datalist" class="input-field p-2 text-sm" placeholder="Select or type product" value="${item.name || ''}" oninput="app.updatePurchaseItem(${index}, 'name', this.value)"></div> <div class="col-span-2"><input type="number" class="input-field p-2 text-sm text-center" placeholder="Qty" value="${item.quantity || ''}" oninput="app.updatePurchaseItem(${index}, 'quantity', this.value)"></div> <div class="col-span-2"><input type="number" step="0.01" class="cost-input input-field p-2 text-sm text-right" placeholder="Cost" value="${item.costPrice || ''}" oninput="app.updatePurchaseItem(${index}, 'costPrice', this.value)"></div> <div class="col-span-3 flex justify-end items-center"> <span class="mr-3">${formatCurrency((item.quantity || 0) * (item.costPrice || 0))}</span> <button type="button" class="text-red-500 hover:text-red-400" onclick="app.removePurchaseItemRow(${index})"><i class="fas fa-trash-alt"></i></button> </div> </div>`).join('');
+            updatePurchaseTotals();
+        }
+        document.getElementById('add-purchase-btn').addEventListener('click', () => { document.getElementById('purchase-modal-title').textContent = 'Add Supplier Purchase'; state.currentPurchaseItems = [{}]; document.getElementById('purchase-form').reset(); document.getElementById('editing-purchase-id').value = ''; renderPurchaseItems(); document.getElementById('purchase-modal').classList.add('visible'); const today = new Date().toISOString().split('T')[0]; document.getElementById('purchase-date').value = today; });
+        document.getElementById('add-purchase-item-row').addEventListener('click', () => { state.currentPurchaseItems.push({}); renderPurchaseItems(); });
+        document.getElementById('purchase-amount-paid').addEventListener('input', updatePurchaseTotals);
+        document.getElementById('purchase-form').addEventListener('submit', async (e) => {
+            e.preventDefault(); const form = e.target; const editingId = form['editing-purchase-id'].value;
+            const validItems = state.currentPurchaseItems.filter(item => item.productId && item.name && item.quantity > 0 && item.costPrice >= 0);
+            if (validItems.length === 0) { alert("Please add at least one valid product."); return; }
+            const totalAmount = validItems.reduce((sum, item) => sum + item.quantity * item.costPrice, 0);
+            const amountPaid = parseFloat(document.getElementById('purchase-amount-paid').value) || 0;
+            if (amountPaid > totalAmount) { alert("Amount paid cannot be greater than the total bill."); return; }
+            const purchaseId = editingId || 'PUR-' + Date.now();
+            const purchaseData = { id: purchaseId, supplierName: document.getElementById('purchase-supplier-name').value, contact: document.getElementById('purchase-supplier-contact').value, date: document.getElementById('purchase-date').value, totalAmount, amountPaid, items: validItems };
+            try {
+                const updates = {}; updates[`data/${currentUserUID}/purchases/${purchaseData.id}`] = purchaseData;
+                const stockAdjustments = {};
+                validItems.forEach(newItem => { const originalItem = state.editingPurchaseOriginalItems.find(o => o.productId === newItem.productId); const originalQty = originalItem ? originalItem.quantity : 0; const diff = newItem.quantity - originalQty; stockAdjustments[newItem.productId] = (stockAdjustments[newItem.productId] || 0) + diff; });
+                if (editingId) { state.editingPurchaseOriginalItems.forEach(originalItem => { if (!validItems.some(v => v.productId === originalItem.productId)) { stockAdjustments[originalItem.productId] = (stockAdjustments[originalItem.productId] || 0) - originalItem.quantity; } }); }
+                for (const productId in stockAdjustments) { const stockDiff = stockAdjustments[productId]; if (stockDiff !== 0) { const productStockRef = ref(database, `data/${currentUserUID}/products/${productId}/stock`); await runTransaction(productStockRef, (currentStock) => (currentStock || 0) + stockDiff); } }
+                for (const item of validItems) { const productCostRef = ref(database, `data/${currentUserUID}/products/${item.productId}/costPrice`); await set(productCostRef, item.costPrice); }
+                await update(ref(database), updates); alert(`Purchase ${editingId ? 'updated' : 'saved'} successfully!`);
+                document.getElementById('purchase-modal').classList.remove('visible'); displayPurchaseInvoice(purchaseData);
+            } catch (error) { console.error("Purchase save/update failed: ", error); alert("An error occurred: " + error.message); }
+        });
+        document.getElementById('open-new-product-submodal-btn').addEventListener('click', () => { document.getElementById('new-product-subform').reset(); populateCategorySelects('sub-'); populateGroupSelects('sub-'); populateBrandSelects('sub-'); document.getElementById('new-product-submodal').classList.add('visible'); });
+        document.getElementById('new-product-subform').addEventListener('submit', async (e) => { e.preventDefault(); const form = e.target; const newProductKey = push(dbRefs.products).key; const brandId = form['sub-product-brand'].value; const brand = state.brands.find(f => f.id === brandId); const newProductData = { id: newProductKey, name: form['sub-product-name'].value, brandId: brandId || '', brandName: brand ? brand.name : '', sellingPrice: parseFloat(form['sub-product-sell-price'].value), category: form['sub-product-category'].value, expiryDate: form['sub-product-expiry'].value, groupId: form['sub-product-group'].value, sku: form['sub-product-sku'].value, costPrice: 0, stock: 0 }; try { await set(ref(database, `data/${currentUserUID}/products/${newProductKey}`), newProductData); state.currentPurchaseItems.push({ productId: newProductKey, name: newProductData.name, quantity: 1, costPrice: 0 }); renderPurchaseItems(); alert('New product created. Now enter its quantity and cost in the list.'); document.getElementById('new-product-submodal').classList.remove('visible'); } catch (err) { alert('Error creating product: ' + err.message); } });
+        function displayPurchaseInvoice(purchase) { if (!purchase) return; const modal = document.getElementById('purchase-invoice-modal'); modal.querySelector('#purchase-invoice-id').textContent = purchase.id; modal.querySelector('#purchase-invoice-supplier-name').textContent = purchase.supplierName; modal.querySelector('#purchase-invoice-date').textContent = new Date(purchase.date).toLocaleDateString(); modal.querySelector('#purchase-invoice-items').innerHTML = (purchase.items || []).map(item => `<tr><td class="text-left py-1">${item.name}</td><td class="text-center">${item.quantity}</td><td class="text-right">${formatCurrency(item.costPrice)}</td><td class="text-right">${formatCurrency(item.costPrice * item.quantity)}</td></tr>`).join(''); modal.querySelector('#purchase-invoice-total').textContent = formatCurrency(purchase.totalAmount); modal.querySelector('#purchase-invoice-paid').textContent = formatCurrency(purchase.amountPaid); modal.querySelector('#purchase-invoice-remaining').textContent = formatCurrency(purchase.totalAmount - purchase.amountPaid); modal.classList.add('visible'); }
+        document.getElementById('close-purchase-invoice-btn').onclick = () => document.getElementById('purchase-invoice-modal').classList.remove('visible');
+        document.getElementById('print-purchase-invoice-btn').addEventListener('click', (e) => { const btn = e.currentTarget; btn.disabled = true; btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Printing...`; document.body.classList.add('printing'); setTimeout(() => { try { window.print(); } finally { document.body.classList.remove('printing'); btn.disabled = false; btn.innerHTML = `<i class="fas fa-print mr-2"></i>Print`; } }, 300); });
+        document.getElementById('download-purchase-invoice-pdf-btn').addEventListener('click', async (e) => { const btn = e.currentTarget; btn.disabled = true; btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Downloading...`; const el = document.getElementById('purchase-invoice-print-area-wrapper'); el.classList.add('force-black-text'); try { const { jsPDF } = window.jspdf; const canvas = await html2canvas(el, { scale: 3, useCORS: true, backgroundColor: '#ffffff'}); const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: [80, 150] }); const pdfWidth = pdf.internal.pageSize.getWidth(); const pdfHeight = (canvas.height * pdfWidth) / canvas.width; pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST'); pdf.save(`purchase-${document.getElementById('purchase-invoice-id').textContent}.pdf`); } catch(err) { console.error("PDF download failed:", err); alert("Could not download PDF."); } finally { el.classList.remove('force-black-text'); btn.disabled = false; btn.innerHTML = `<i class="fas fa-file-pdf mr-2"></i>Download PDF`; }});
+
+        // --- NEW Customer (Khata) Logic ---
+        document.getElementById('add-customer-btn').addEventListener('click', () => { document.getElementById('customer-modal-title').textContent = 'Add New Customer'; document.getElementById('customer-form').reset(); document.getElementById('edit-customer-id').value = ''; document.getElementById('customer-modal').classList.add('visible'); });
+        document.getElementById('customer-form').addEventListener('submit', (e) => { e.preventDefault(); const form = e.target; const customerId = form['edit-customer-id'].value || push(dbRefs.customers).key; const customerData = { id: customerId, name: form['customer-name-input'].value, phone: form['customer-phone-input'].value, cnic: form['customer-cnic-input'].value, address: form['customer-address-input'].value, payments: state.customers.find(c => c.id === customerId)?.payments || [] }; set(ref(database, `data/${currentUserUID}/customers/${customerId}`), customerData).then(() => { document.getElementById('customer-modal').classList.remove('visible'); }).catch(err => alert('Error: ' + err.message)); });
+        document.getElementById('settle-credit-form').addEventListener('submit', async (e) => {
+            e.preventDefault(); const form = e.target; const customerId = form['settle-customer-id'].value;
+            const amountPaid = parseFloat(form['settle-amount-paid'].value);
+            const customer = state.customers.find(c => c.id === customerId); if(!customer) return;
+            const creditSalesTotal = state.sales.filter(s => s.customerId === customer.id && s.status === 'Credit').reduce((sum, s) => sum + s.total, 0);
+            const paymentsTotal = (customer.payments || []).reduce((sum, p) => sum + p.amount, 0);
+            const balance = creditSalesTotal - paymentsTotal;
+            if(isNaN(amountPaid) || amountPaid <= 0) { alert("Please enter a valid amount."); return; }
+            if(amountPaid > balance + 0.01) { alert("Paid amount cannot be more than the due amount."); return; }
+            const customerPaymentsRef = ref(database, `data/${currentUserUID}/customers/${customerId}/payments`);
+            const newPaymentRef = push(customerPaymentsRef);
+            try { await set(newPaymentRef, { amount: amountPaid, date: new Date().toISOString() }); alert("Payment saved successfully!"); document.getElementById('settle-credit-modal').classList.remove('visible'); } catch(err) { alert('Error saving payment: ' + err.message); }
+        });
+        document.getElementById('print-ledger-btn').addEventListener('click', (e) => { const btn = e.currentTarget; btn.disabled = true; btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Printing...`; document.body.classList.add('printing'); setTimeout(() => { try { window.print(); } finally { document.body.classList.remove('printing'); btn.disabled = false; btn.innerHTML = `<i class="fas fa-print mr-2"></i>Print Ledger`; } }, 300); });
+        document.getElementById('download-ledger-pdf-btn').addEventListener('click', async (e) => { const btn = e.currentTarget; btn.disabled = true; btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Downloading...`; try { const { jsPDF } = window.jspdf; const el = document.getElementById('customer-ledger-printable-area'); const canvas = await html2canvas(el, { scale: 2, useCORS: true }); const pdf = new jsPDF('p', 'mm', 'a4'); const imgWidth = 210; const pageHeight = 295; const imgHeight = canvas.height * imgWidth / canvas.width; let heightLeft = imgHeight; let position = 0; pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight); heightLeft -= pageHeight; while (heightLeft >= 0) { position = heightLeft - imgHeight; pdf.addPage(); pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight); heightLeft -= pageHeight; } pdf.save(`ledger-${document.getElementById('ledger-customer-name').textContent}.pdf`); } catch(err) { console.error("Ledger PDF download failed:", err); alert("Could not download ledger PDF."); } finally { btn.disabled = false; btn.innerHTML = `<i class="fas fa-file-pdf mr-2"></i>Download PDF`; }});
+
+
+        // --- Sale, Credit, Hold, and Cancel Logic ---
+        document.getElementById('cancel-sale-btn').addEventListener('click', () => { if(confirm('Are you sure you want to cancel this sale?')) resetPOS(); });
+        document.getElementById('hold-sale-btn').addEventListener('click', () => {
+            if(state.cart.length === 0) { alert('Cart is empty.'); return; }
+            const billToHold = {
+                id: push(dbRefs.holdBills).key,
+                cart: state.cart,
+                customerName: document.getElementById('pos-customer-input').value,
+                discountValue: document.getElementById('cart-discount-value').value,
+                heldAt: new Date().toISOString()
+            };
+            set(ref(database, `data/${currentUserUID}/holdBills/${billToHold.id}`), billToHold).then(() => {
+                alert('Bill held successfully.');
+                resetPOS();
+            });
+        });
+        document.getElementById('credit-sale-btn').addEventListener('click', () => {
+            if(state.cart.length === 0) { alert('Cart is empty.'); return; }
+            const listEl = document.getElementById('credit-customer-list');
+            listEl.innerHTML = state.customers.map(c => 
+                `<div class="p-3 rounded-md hover:bg-blue-600 cursor-pointer" style="background-color: var(--bg-modal-darker);" onclick="app.chargeToAccount('${c.id}')">
+                    <p class="font-bold">${c.name}</p>
+                    <p class="text-sm" style="color: var(--text-secondary);">${c.cnic || 'No CNIC'}</p>
+                </div>`
+            ).join('') || '<p class="text-center">No customers found. Add one from the Customers page.</p>';
+            document.getElementById('credit-customer-select-modal').classList.add('visible');
+        });
+        
+        window.app.chargeToAccount = (customerId) => {
+            document.getElementById('credit-customer-select-modal').classList.remove('visible');
+            handleSale(true, customerId);
+        }
+
+        async function handleSale(isCredit, customerId = null) {
+            if (state.cart.length === 0) { alert('Cart is empty.'); return; }
+            const saleBtn = document.getElementById('complete-sale-btn'); const creditBtn = document.getElementById('credit-sale-btn');
+            const originalSaleText = saleBtn.innerHTML; const originalCreditText = creditBtn.innerHTML;
+            try {
+                saleBtn.disabled = true; creditBtn.disabled = true;
+                const loadingSpinner = `<i class="fas fa-spinner fa-spin mr-2"></i>`;
+                saleBtn.innerHTML = `${loadingSpinner}Processing...`; creditBtn.innerHTML = `${loadingSpinner}Processing...`;
+                
+                const customer = isCredit ? state.customers.find(c => c.id === customerId) : null;
+                const customerName = isCredit ? (customer ? customer.name : 'Unknown Account') : (document.getElementById('pos-customer-input').value.trim() || 'Walk-in Customer');
+
+                const subtotal = state.cart.reduce((s, i) => s + (i.sellingPrice || 0) * i.quantity, 0);
+                const discountValue = parseFloat(document.getElementById('cart-discount-value').value) || 0;
+                let calculatedDiscount = (state.settings.discountType === 'percent') ? (subtotal * discountValue) / 100 : discountValue;
+                const total = Math.max(0, subtotal - calculatedDiscount);
+                const profit = state.cart.reduce((s, i) => s + ((i.sellingPrice || 0) - (i.costPrice || 0)) * i.quantity, 0) - calculatedDiscount;
+                const saleId = 'INV-' + Date.now();
+                const saleStatus = isCredit ? 'Credit' : 'Completed';
+                
+                const sale = { id: saleId, date: new Date().toISOString(), customerName, customerId: isCredit ? customerId : null, items: state.cart.map(i => ({...i})), subtotal, discount: calculatedDiscount, total, profit, status: saleStatus };
+                
+                const updates = {};
+                updates[`data/${currentUserUID}/sales/${sale.id}`] = sale;
+                for(const item of sale.items) { const productStockRef = ref(database, `data/${currentUserUID}/products/${item.id}/stock`); await runTransaction(productStockRef, (currentStock) => (currentStock || 0) - item.quantity); };
+                
+                await update(ref(database), updates);
+                if (isCredit) { alert('Sale charged to account successfully!'); resetPOS(); } else { displayInvoice(sale); }
+            } catch (err) {
+                alert('Error: ' + err.message); console.error(err);
+            } finally {
+                saleBtn.disabled = false; creditBtn.disabled = false;
+                saleBtn.innerHTML = originalSaleText; creditBtn.innerHTML = originalCreditText;
+            }
+        }
+        document.getElementById('complete-sale-btn').addEventListener('click', () => handleSale(false));
+        
+        // --- Image Handling Logic ---
+        const saveProductImage = (productId, file) => {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        localStorage.setItem(`product_image_${productId}`, e.target.result);
+                        resolve(e.target.result);
+                    } catch (error) {
+                        console.error("LocalStorage save error: ", error);
+                        alert("Could not save image. Storage might be full.");
+                        resolve(null);
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+        };
+        const getProductImage = (productId) => {
+            return Promise.resolve(localStorage.getItem(`product_image_${productId}`));
+        };
+
+        // Group, Brand & Product Management Logic
+        document.getElementById('add-group-form').addEventListener('submit', e => { e.preventDefault(); const form = e.target; const newGroupKey = push(dbRefs.groups).key; set(ref(database, `data/${currentUserUID}/groups/${newGroupKey}`), { id: newGroupKey, name: form['group-name'].value }).then(() => form.reset()).catch(e => alert(e.message)); });
+        document.getElementById('add-brand-form').addEventListener('submit', e => { e.preventDefault(); const form = e.target; const name = form['brand-name'].value.trim(); if (!name) return; const editingId = form['editing-brand-id'].value; const brandId = editingId || push(dbRefs.brands).key; const brandData = { id: brandId, name: name, details: form['brand-details'].value, description: form['brand-description'].value, notes: form['brand-notes'].value }; set(ref(database, `data/${currentUserUID}/brands/${brandId}`), brandData).then(() => { form.reset(); form['editing-brand-id'].value = ''; document.getElementById('cancel-edit-brand-btn').classList.add('hidden'); }).catch(e => alert(e.message)); });
+        document.getElementById('cancel-edit-brand-btn').addEventListener('click', () => { const form = document.getElementById('add-brand-form'); form.reset(); form.querySelector('#editing-brand-id').value = ''; document.getElementById('cancel-edit-brand-btn').classList.add('hidden'); });
+        
+        document.getElementById('add-product-form').addEventListener('submit', async e => { 
+            e.preventDefault(); 
+            const form = e.target; 
+            const newProductKey = push(dbRefs.products).key; 
+            const brandId = form['product-brand'].value; 
+            const brand = state.brands.find(f => f.id === brandId);
+            const imageFile = form['product-image'].files[0];
+            let imageId = null;
+
+            if (imageFile) {
+                imageId = newProductKey; 
+                await saveProductImage(imageId, imageFile);
+            }
+
+            const newProduct = { id: newProductKey, name: form['product-name'].value, brandId: brandId || '', brandName: brand ? brand.name : '', sku: form['product-sku'].value, category: form['product-category'].value, groupId: form['product-group'].value, costPrice: parseFloat(form['product-cost-price'].value), sellingPrice: parseFloat(form['product-sell-price'].value), stock: parseInt(form['product-stock'].value), expiryDate: form['product-expiry'].value, imageId: imageId }; 
+            set(ref(database, `data/${currentUserUID}/products/${newProductKey}`), newProduct).then(() => { form.reset(); }).catch(e => alert('Error: ' + e.message)); 
+        });
+
+        document.getElementById('edit-product-form').addEventListener('submit', async (e) => { 
+            e.preventDefault(); 
+            const form = e.target; 
+            const productId = form.querySelector('#edit-product-id').value; 
+            const brandId = form['edit-product-brand'].value; 
+            const brand = state.brands.find(f => f.id === brandId); 
+            const imageFile = form['edit-product-image'].files[0];
+            let imageId = state.products.find(p => p.id === productId).imageId || null;
+
+            if (imageFile) {
+                imageId = productId;
+                await saveProductImage(imageId, imageFile);
+            }
+
+            const updatedData = { name: form['edit-product-name'].value, brandId: brandId || '', brandName: brand ? brand.name : '', sku: form['edit-product-sku'].value, category: form['edit-product-category'].value, groupId: form['edit-product-group'].value, costPrice: parseFloat(form['edit-product-cost-price'].value), sellingPrice: parseFloat(form['edit-product-sell-price'].value), stock: parseInt(form['edit-product-stock'].value), expiryDate: form['edit-product-expiry'].value, imageId: imageId }; 
+            update(ref(database, `data/${currentUserUID}/products/${productId}`), updatedData).then(() => { document.getElementById('edit-product-modal').classList.remove('visible'); }).catch(e => alert('Error: ' + e.message)); 
+        });
+        
+        document.getElementById('return-sale-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const saleId = form.dataset.saleId;
+            const saleRef = ref(database, `data/${currentUserUID}/sales/${saleId}`);
+            const itemsToReturn = Array.from(form.querySelectorAll('input[type="number"]'))
+                .map(input => ({
+                    id: input.dataset.itemId,
+                    qty: parseInt(input.value, 10),
+                    cost: parseFloat(input.dataset.itemCost)
+                }))
+                .filter(item => item.qty > 0);
+
+            if (itemsToReturn.length === 0) {
+                alert('Please enter a quantity to return.');
+                return;
+            }
+
+            try {
+                let costOfReturnedItems = 0;
+                await runTransaction(saleRef, (sale) => {
+                    if (sale) {
+                        let totalReturnAmount = 0;
+                        let totalReturnProfit = 0;
+                        itemsToReturn.forEach(returnItem => {
+                            const saleItem = sale.items.find(i => i.id === returnItem.id);
+                            if (saleItem) {
+                                const returnedQty = saleItem.returnedQty || 0;
+                                if (returnItem.qty > 0 && returnItem.qty <= (saleItem.quantity - returnedQty)) {
+                                    saleItem.returnedQty = returnedQty + returnItem.qty;
+                                    totalReturnAmount += returnItem.qty * saleItem.sellingPrice;
+                                    totalReturnProfit += returnItem.qty * (saleItem.sellingPrice - saleItem.costPrice);
+                                    costOfReturnedItems += returnItem.qty * (saleItem.costPrice || 0);
+
+                                    const productRef = ref(database, `data/${currentUserUID}/products/${saleItem.id}/stock`);
+                                    runTransaction(productRef, (currentStock) => (currentStock || 0) + returnItem.qty);
+                                }
+                            }
+                        });
+                        sale.total -= totalReturnAmount;
+                        sale.profit -= totalReturnProfit;
+                        const allItemsReturned = sale.items.every(item => (item.returnedQty || 0) === item.quantity);
+                        sale.status = allItemsReturned ? 'Returned' : 'Partially Returned';
+                    }
+                    return sale;
+                });
+                
+                if (costOfReturnedItems > 0) {
+                    const expenseId = push(dbRefs.expenses).key;
+                    const expenseData = {
+                        id: expenseId, title: `Loss from Returned Items (Invoice ${saleId})`, category: 'Return Loss',
+                        amount: costOfReturnedItems, date: new Date().toISOString().split('T')[0],
+                        notes: `Cost of goods returned. This is a non-cash expense.`
+                    };
+                    await set(ref(database, `data/${currentUserUID}/expenses/${expenseId}`), expenseData);
+                }
+
+                alert('Return processed successfully!');
+                document.getElementById('return-sale-modal').classList.remove('visible');
+            } catch (error) {
+                console.error("Return failed: ", error);
+                alert("An error occurred during the return process.");
+            }
+        });
+        document.getElementById('settle-credit-modal').querySelector('#settle-amount-paid').addEventListener('input', (e) => { const due = parseFloat(document.getElementById('settle-amount-due').textContent.replace('₨','')); const paid = parseFloat(e.target.value) || 0; document.getElementById('settle-amount-remaining').textContent = formatCurrency(Math.max(0, due - paid)); });
+
+        // --- NEW: Staff and Expense Management ---
+        document.getElementById('add-staff-form').addEventListener('submit', e => { e.preventDefault(); const form = e.target; const staffId = push(dbRefs.staff).key; const staffData = { id: staffId, name: form['staff-name'].value, phone: form['staff-phone'].value, position: form['staff-position'].value, salary: parseFloat(form['staff-salary'].value), joiningDate: form['staff-joining-date'].value, status: 'Active' }; set(ref(database, `data/${currentUserUID}/staff/${staffId}`), staffData).then(() => { alert('Staff member added.'); form.reset(); document.getElementById('staff-joining-date').value = new Date().toISOString().split('T')[0]; }).catch(err => alert('Error: ' + err.message)); });
+        document.getElementById('edit-staff-form').addEventListener('submit', e => { e.preventDefault(); const form = e.target; const staffId = form['edit-staff-id'].value; const updatedData = { name: form['edit-staff-name'].value, phone: form['edit-staff-phone'].value, position: form['edit-staff-position'].value, salary: parseFloat(form['edit-staff-salary'].value), joiningDate: form['edit-staff-joining-date'].value, status: form['edit-staff-status'].value }; update(ref(database, `data/${currentUserUID}/staff/${staffId}`), updatedData).then(() => { document.getElementById('edit-staff-modal').classList.remove('visible'); }).catch(err => alert('Error: ' + err.message)); });
+        document.getElementById('pay-salary-form').addEventListener('submit', e => {
+            e.preventDefault(); const form = e.target; const staffId = form['pay-salary-staff-id'].value; const staff = state.staff.find(s => s.id === staffId);
+            const expenseId = push(dbRefs.expenses).key;
+            const expenseData = { id: expenseId, title: `Salary for ${staff.name} (${form['pay-salary-month'].value})`, category: 'Salary', amount: parseFloat(form['pay-salary-amount'].value), date: form['pay-salary-date'].value, notes: form['pay-salary-notes'].value };
+            set(ref(database, `data/${currentUserUID}/expenses/${expenseId}`), expenseData).then(() => { alert('Salary paid and recorded as an expense.'); document.getElementById('pay-salary-modal').classList.remove('visible'); }).catch(err => alert('Error: ' + err.message));
+        });
+        document.getElementById('add-expense-form').addEventListener('submit', e => { e.preventDefault(); const form = e.target; const expenseId = push(dbRefs.expenses).key; const expenseData = { id: expenseId, title: form['expense-title'].value, category: form['expense-category'].value, amount: parseFloat(form['expense-amount'].value), date: form['expense-date'].value, notes: form['expense-notes'].value }; set(ref(database, `data/${currentUserUID}/expenses/${expenseId}`), expenseData).then(() => { alert('Expense added.'); form.reset(); document.getElementById('expense-date').value = new Date().toISOString().split('T')[0]; }).catch(err => alert('Error: ' + err.message)); });
+        document.getElementById('edit-expense-form').addEventListener('submit', e => { e.preventDefault(); const form = e.target; const expenseId = form['edit-expense-id'].value; const updatedData = { title: form['edit-expense-title'].value, category: form['edit-expense-category'].value, amount: parseFloat(form['edit-expense-amount'].value), date: form['edit-expense-date'].value, notes: form['edit-expense-notes'].value }; update(ref(database, `data/${currentUserUID}/expenses/${expenseId}`), updatedData).then(() => { document.getElementById('edit-expense-modal').classList.remove('visible'); }).catch(err => alert('Error: ' + err.message)); });
+        
+
+        // Initialize listeners
+        cleanupListeners();
+        const listenersToAttach = [
+            { path: dbRefs.products, handler: (snap) => { state.products = snap.exists() ? Object.values(snap.val()) : []; }},
+            { path: dbRefs.sales, handler: (snap) => { state.sales = snap.exists() ? Object.values(snap.val()) : []; }},
+            { path: dbRefs.customers, handler: (snap) => { state.customers = snap.exists() ? Object.values(snap.val()) : []; }},
+            { path: dbRefs.purchases, handler: (snap) => { state.purchases = snap.exists() ? Object.values(snap.val()) : []; }},
+            { path: dbRefs.groups, handler: (snap) => { state.groups = snap.exists() ? Object.values(snap.val()) : []; populateGroupSelects(); populateGroupSelects('sub-'); renderGroupFilterDropdown(); }},
+            { path: dbRefs.brands, handler: (snap) => { state.brands = snap.exists() ? Object.values(snap.val()) : []; populateBrandSelects(); populateBrandSelects('edit-'); populateBrandSelects('sub-'); renderBrandFilterDropdown(); }},
+            { path: dbRefs.settings, handler: (snap) => { 
+                state.settings = snap.exists() ? snap.val() : { discountType: 'amount', storeName: 'My Awesome Store' }; 
+                document.getElementById('setting-store-name').value = state.settings.storeName || 'My Awesome Store';
+                document.getElementById('setting-discount-type').value = state.settings.discountType;
+                document.getElementById('setting-contact-number').value = state.settings.contact || '';
+                document.getElementById('setting-email').value = state.settings.email || '';
+                
+                document.getElementById('receipt-store-name').textContent = state.settings.storeName || 'My Awesome Store';
+                document.getElementById('receipt-store-contact').textContent = state.settings.contact || '';
+                document.getElementById('receipt-store-email').textContent = state.settings.email || '';
+                document.getElementById('purchase-receipt-store-name').textContent = state.settings.storeName || 'My Awesome Store';
+                updateCartTotals(); 
+            }},
+            { path: dbRefs.holdBills, handler: (snap) => { state.holdBills = snap.exists() ? Object.values(snap.val()) : []; }},
+            { path: dbRefs.staff, handler: (snap) => { state.staff = snap.exists() ? Object.values(snap.val()) : []; }},
+            { path: dbRefs.expenses, handler: (snap) => { state.expenses = snap.exists() ? Object.values(snap.val()) : []; }},
+        ];
+        listenersToAttach.forEach(l => {
+            const listener = onValue(l.path, (snapshot) => {
+                l.handler(snapshot); updateAllPages();
+            });
+            dbListeners.push({ ref: l.path, type: 'value', func: listener });
+        });
+
+        populateCategorySelects(); populateCategorySelects('sub-');
+        
+        showPage('dashboard');
+    }
+
+    async function seedInitialData() {
+        const productsRef = ref(database, `data/${currentUserUID}/products`);
+        const snapshot = await get(productsRef);
+
+        if (!snapshot.exists()) {
+            console.log("New user detected. Seeding initial demo data...");
+
+            const today = new Date();
+            const oneYearFromNow = new Date(new Date().setFullYear(today.getFullYear() + 1)).toISOString().split('T')[0];
+            const sixMonthsFromNow = new Date(new Date().setMonth(today.getMonth() + 6)).toISOString().split('T')[0];
+            const todayStr = today.toISOString().split('T')[0];
+            const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+
+            const updates = {};
+
+            const brandAppleId = push(dbRefs.brands).key; updates[`data/${currentUserUID}/brands/${brandAppleId}`] = { id: brandAppleId, name: 'Apple', details: 'Consumer Electronics' };
+            const brandSamsungId = push(dbRefs.brands).key; updates[`data/${currentUserUID}/brands/${brandSamsungId}`] = { id: brandSamsungId, name: 'Samsung', details: 'Consumer Electronics' };
+            const brandNestleId = push(dbRefs.brands).key; updates[`data/${currentUserUID}/brands/${brandNestleId}`] = { id: brandNestleId, name: 'Nestle', details: 'Food & Beverage' };
+            
+            const sampleProducts = [
+                { id: push(dbRefs.products).key, name: 'iPhone 15 Pro', brandId: brandAppleId, brandName: 'Apple', sku: 'A3106-256-BLK', category: 'Electronics', costPrice: 280000, sellingPrice: 320000, stock: 10, expiryDate: '' },
+                { id: push(dbRefs.products).key, name: 'Milk Pak 1L', brandId: brandNestleId, brandName: 'Nestle', sku: 'MLK-1L', category: 'Groceries', costPrice: 260, sellingPrice: 280, stock: 50, expiryDate: sixMonthsFromNow },
+            ];
+            sampleProducts.forEach(p => { updates[`data/${currentUserUID}/products/${p.id}`] = p; });
+            
+            // Sample Staff
+            const staffId1 = push(dbRefs.staff).key;
+            updates[`data/${currentUserUID}/staff/${staffId1}`] = { id: staffId1, name: 'Aslam Pervez', phone: '0300-1234567', position: 'Sales Manager', salary: 35000, joiningDate: '2023-01-01', status: 'Active' };
+
+            // Sample Expenses
+            const expenseId1 = push(dbRefs.expenses).key;
+            updates[`data/${currentUserUID}/expenses/${expenseId1}`] = { id: expenseId1, title: 'Shop Rent for Current Month', category: 'Rent', amount: 25000, date: firstDayOfMonth, notes: 'Paid to landlord' };
+            const expenseId2 = push(dbRefs.expenses).key;
+            updates[`data/${currentUserUID}/expenses/${expenseId2}`] = { id: expenseId2, title: 'Electricity Bill', category: 'Utilities', amount: 8500, date: todayStr, notes: 'K-Electric Bill' };
+
+            updates[`data/${currentUserUID}/settings`] = { storeName: 'My Awesome Store', contact: '123-4567890', email: 'contact@mystore.com', discountType: 'amount' };
+
+            await update(ref(database), updates);
+            console.log("Demo data seeded successfully.");
+        }
+    }
+
+});
+</script>
+</body>
+</html>
